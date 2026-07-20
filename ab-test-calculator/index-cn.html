@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Systems Toolkit · A/B 测试工具包 | Grace Ge</title>
+<style>
+  :root{
+    --primary:#4f46e5;--primary-dark:#4338ca;--bg:#f8fafc;--card:#ffffff;
+    --text:#1e293b;--muted:#64748b;--border:#e2e8f0;--green:#16a34a;--amber:#d97706;--radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);padding:24px 12px 60px;}
+  .wrap{max-width:880px;margin:0 auto;}
+  header{text-align:center;margin-bottom:24px;}
+  header .kicker{font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--primary);font-weight:700;margin-bottom:6px;}
+  header h1{font-size:1.7rem;margin:0 0 4px;}
+  header p{color:var(--muted);margin:0;}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;background:var(--card);padding:6px;border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:20px;}
+  .tab-btn{flex:1 1 auto;min-width:120px;padding:10px 14px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-size:0.95rem;font-weight:600;cursor:pointer;transition:all .15s;}
+  .tab-btn.active{background:var(--primary);color:#fff;}
+  .panel{display:none;background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+  .panel.active{display:block;}
+  .panel h2{margin-top:0;font-size:1.3rem;}
+  .hint{color:var(--muted);font-size:0.88rem;margin-bottom:18px;line-height:1.5;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  label{display:block;font-size:0.9rem;font-weight:600;margin-bottom:6px;}
+  textarea,input,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:0.95rem;font-family:inherit;}
+  textarea{resize:vertical;}
+  .field{margin-bottom:16px;}
+  .btn{background:var(--primary);color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;}
+  .btn:hover{background:var(--primary-dark);}
+  .subtabs{display:flex;gap:6px;margin-bottom:16px;}
+  .subtabs button{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:0.85rem;color:var(--muted);}
+  .subtabs button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .sub-panel{display:none;}
+  .sub-panel.active{display:block;}
+  .results{margin-top:22px;padding:18px;background:#f1f5f9;border-radius:10px;}
+  .results h3{margin-top:0;}
+  .result-row{display:flex;justify-content:space-between;padding:4px 0;font-size:0.92rem;border-bottom:1px dashed var(--border);gap:12px;}
+  .result-row:last-child{border-bottom:none;}
+  .verdict{margin-top:12px;padding:10px 14px;border-radius:8px;font-weight:700;text-align:center;}
+  .verdict.sig{background:#dcfce7;color:var(--green);}
+  .verdict.nosig{background:#fef3c7;color:var(--amber);}
+  details.tutorial{margin-top:20px;border:1px solid var(--border);border-radius:10px;background:#fafbfc;overflow:hidden;}
+  details.tutorial summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:0.92rem;color:var(--primary-dark);list-style:none;display:flex;align-items:center;gap:8px;}
+  details.tutorial summary::-webkit-details-marker{display:none;}
+  details.tutorial summary::before{content:'▸';transition:transform .15s;}
+  details.tutorial[open] summary::before{transform:rotate(90deg);}
+  details.tutorial .tutorial-body{padding:0 16px 16px;font-size:0.88rem;line-height:1.7;color:var(--text);}
+  details.tutorial .tutorial-body h4{font-size:0.85rem;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;}
+  details.tutorial .tutorial-body h4:first-child{margin-top:0;}
+  details.tutorial .tutorial-body ul{margin:0;padding-left:20px;}
+  details.tutorial .tutorial-body li{margin-bottom:6px;}
+  details.tutorial .tutorial-body li strong{color:var(--text);}
+  footer{text-align:center;color:var(--muted);font-size:0.8rem;margin-top:30px;line-height:1.6;}
+  footer .brand{font-weight:600;color:var(--text);}
+  footer .tagline{color:var(--muted);}
+  footer a{color:var(--primary);text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Decision Systems Toolkit</div>
+    <h1>A/B 测试工具包</h1>
+    <p>均值比较 · 比例比较 · 样本量计算 · 检验功效</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('mean')">均值比较</button>
+    <button class="tab-btn" onclick="switchTab('prop')">比例比较</button>
+    <button class="tab-btn" onclick="switchTab('size')">样本量计算</button>
+    <button class="tab-btn" onclick="switchTab('power')">检验功效</button>
+  </div>
+
+  <div id="panel-mean" class="panel active">
+    <h2>均值比较（T 检验）</h2>
+    <p class="hint">适用于比较两组连续数值型数据的平均值差异，例如页面停留时间、订单金额、客单价等。数值用逗号或空格分隔。</p>
+    <div class="grid2">
+      <div class="field"><label>对照组 A 数据</label><textarea id="meanA" rows="5" placeholder="例如：42, 38, 45, 40, 39"></textarea></div>
+      <div class="field"><label>实验组 B 数据</label><textarea id="meanB" rows="5" placeholder="例如：45, 42, 48, 44, 47"></textarea></div>
+    </div>
+    <button class="btn" onclick="calcMean()">计算结果</button>
+    <div id="meanResults"></div>
+    <details class="tutorial">
+      <summary>怎么读这个结果 & 常见错误</summary>
+      <div class="tutorial-body">
+        <h4>怎么读</h4>
+        <ul>
+          <li><strong>p 值 < 0.05</strong> 说明这个差异不太可能只是随机波动，但它<strong>不代表差异有多大或多重要</strong>——一定要同时看"差值"和"相对差异"这两个数字，判断这个差异在业务上是否值得为此改动。</li>
+          <li><strong>自由度（df）</strong>越接近两组样本量之和，说明两组方差比较接近；数值明显偏小，说明两组波动程度差异较大，属正常现象，工具已自动做了校正（Welch's t-test），不需要你手动处理。</li>
+        </ul>
+        <h4>常见错误</h4>
+        <ul>
+          <li><strong>中途偷看、看着不显著就加样本</strong>——这是最常见的假阳性来源。正确做法是测试前定好样本量或时长，跑完再看，中途不看结果做判断。</li>
+          <li><strong>样本量很小（每组 < 30）且数据明显不是正态分布</strong>时，t 检验的结果不够稳健，建议积累更多数据或换用非参数方法。</li>
+          <li><strong>把"统计显著"等同于"业务重要"</strong>——极大的样本量下，一个毫无实际意义的微小差异也可能测出 p<0.05。反过来看相对差异的大小。</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="panel-prop" class="panel">
+    <h2>比例比较（Z 检验 / 转化率对比）</h2>
+    <p class="hint">适用于比较两个版本的转化率、点击率、打开率等比例型指标。</p>
+    <div class="grid2">
+      <div>
+        <h3 style="margin:0 0 8px;font-size:1rem;">对照组 A</h3>
+        <div class="field"><label>转化数</label><input type="number" id="propAConv" min="0"></div>
+        <div class="field"><label>总样本量</label><input type="number" id="propASize" min="1"></div>
+      </div>
+      <div>
+        <h3 style="margin:0 0 8px;font-size:1rem;">实验组 B</h3>
+        <div class="field"><label>转化数</label><input type="number" id="propBConv" min="0"></div>
+        <div class="field"><label>总样本量</label><input type="number" id="propBSize" min="1"></div>
+      </div>
+    </div>
+    <button class="btn" onclick="calcProp()">计算结果</button>
+    <div id="propResults"></div>
+    <details class="tutorial">
+      <summary>怎么读这个结果 & 常见错误</summary>
+      <div class="tutorial-body">
+        <h4>怎么读</h4>
+        <ul>
+          <li><strong>95% 置信区间</strong>比单看 p 值信息量更大——它告诉你这个差异合理的取值范围。如果区间跨越 0（一端正一端负），说明证据不足以确定方向。本工具使用 <strong>Newcombe（Wilson score）方法</strong>计算区间，在样本较小或转化率接近 0%/100% 时，比教材常见的简单正态近似（Wald 区间）更稳健，不会出现"下界为负"这类不合理结果。</li>
+          <li>同时看<strong>绝对差（百分点）</strong>和<strong>相对提升（%）</strong>：转化率从 1% 涨到 2%，相对提升是 100%，但绝对差只有 1 个百分点——两个数字讲的是不同的故事，报告时都要给。</li>
+          <li><strong>极端小样本下，p 值和置信区间可能"看起来矛盾"</strong>——p 值基于正态近似，置信区间基于 Wilson score，两者不是同一套数学框架。样本量非常小时偶尔会出现 p<0.05 但区间又几乎贴着 0 的情况，这是两种方法各自的已知特性，不是计算错误；样本量极小时，两个数字都要谨慎解读，最好的做法还是积累更多数据。</li>
+        </ul>
+        <h4>常见错误</h4>
+        <ul>
+          <li><strong>转化数极小（个位数）时</strong>，p 值部分仍基于正态近似，结果仅供参考，建议积累更多数据再下结论。</li>
+          <li><strong>忽略实验时长</strong>——即使样本量"够了"，如果测试没有跑满至少一个完整的业务周期（例如一整周，覆盖工作日和周末），结果可能被时间因素污染。</li>
+          <li><strong>只看相对提升不看绝对基数</strong>——小基数上的"翻倍"往往在业务上没那么震撼，决策前换算成绝对数字看看实际影响。</li>
+          <li><strong>同时盯着好几个指标找显著</strong>——如果你同时监控转化率、客单价、停留时长等一堆指标，测试的指标够多，总有一个会因为随机波动"显著"，这叫多重比较问题。正确做法是测试前就定好一个主要指标，其他指标作为参考观察，不要在一堆指标里挑一个显著的当结论。</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="panel-size" class="panel">
+    <h2>样本量计算器</h2>
+    <div class="subtabs">
+      <button class="active" onclick="switchSizeMode('ab', this)">A/B 测试模式</button>
+      <button onclick="switchSizeMode('pop', this)">总体调查模式</button>
+    </div>
+    <div id="size-ab" class="sub-panel active">
+      <p class="hint">根据基线转化率和你想检测出的最小效应（MDE），估算每组所需样本量。这是做 A/B 测试该用的公式。</p>
+      <div class="grid2">
+        <div class="field"><label>基线转化率（%）</label><input type="number" id="abBaseline" step="0.1" placeholder="例如 5"></div>
+        <div class="field"><label>最小可检测效应 MDE</label><input type="number" id="abMDE" step="0.1" placeholder="例如 20"></div>
+        <div class="field"><label>MDE 类型</label>
+          <select id="abMDEType"><option value="relative">相对提升（%）</option><option value="absolute">绝对提升（百分点）</option></select>
+        </div>
+        <div class="field"><label>显著性水平</label>
+          <select id="abAlpha"><option value="90">90%（α=0.10）</option><option value="95" selected>95%（α=0.05）</option><option value="99">99%（α=0.01）</option></select>
+        </div>
+        <div class="field"><label>统计功效 Power</label>
+          <select id="abPower"><option value="80" selected>80%</option><option value="90">90%</option><option value="95">95%</option></select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcABSize()">计算样本量</button>
+      <div id="abSizeResults"></div>
+    </div>
+    <div id="size-pop" class="sub-panel">
+      <p class="hint">当总体规模有限（例如内部员工调研、老客户名单）时，计算所需抽样数量（有限总体修正）。</p>
+      <div class="grid2">
+        <div class="field"><label>总体规模 N</label><input type="number" id="popN" min="1"></div>
+        <div class="field"><label>置信水平</label>
+          <select id="popConf"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select>
+        </div>
+        <div class="field"><label>误差范围（%）</label><input type="number" id="popMargin" value="5"></div>
+      </div>
+      <button class="btn" onclick="calcPopSize()">计算样本量</button>
+      <div id="popSizeResults"></div>
+    </div>
+    <details class="tutorial">
+      <summary>怎么读这个结果 & 常见错误</summary>
+      <div class="tutorial-body">
+        <h4>两个模式的区别（最容易搞混的地方）</h4>
+        <ul>
+          <li><strong>A/B 测试模式</strong>回答的问题是："我要每组抽多少人，才能有把握地测出两个版本之间某个大小的差异？"——这里面包含"检测效应"这个概念，需要你先假设一个基线转化率和想抓住的最小提升幅度（MDE）。</li>
+          <li><strong>总体调查模式</strong>回答的是完全不同的问题："我有一个已知规模的总体，要抽多少样本才能让调查结果的误差控制在某个范围内？"——这里没有"对比两组"的概念，纯粹是描述性抽样。</li>
+          <li><strong>两者公式不能互换使用</strong>——拿总体调查的样本量去跑 A/B 测试，几乎总是会低估你实际需要的样本量，因为它根本没考虑"检测两组差异"这件事所需的统计功效。</li>
+          <li><strong>A/B 测试模式的公式假设两组均分流量（各 50%）</strong>——如果你的实验设计是不均分流量（比如 90/10），实际所需的总样本量会比这里算出的更多，需要用非均分版本的公式重新计算。</li>
+        </ul>
+        <h4>常见错误</h4>
+        <ul>
+          <li><strong>MDE 设得越小，需要的样本量越大</strong>，且不是线性增长——如果你想测出很微小的差异，样本量可能会大到不现实，这时候应该重新考虑要检测的效应大小是否合理。</li>
+          <li><strong>算出样本量后，还要跑满至少一个完整业务周期</strong>——即使提前触达了目标样本量，如果只跑了 2 天就停，结果仍可能被时间因素（比如周末流量结构不同）干扰。</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="panel-power" class="panel">
+    <h2>检验功效计算器</h2>
+    <p class="hint">已知每组样本量时，反推该实验能达到的统计功效（真实存在差异时，你有多大概率能发现它）。</p>
+    <div class="grid2">
+      <div class="field"><label>每组样本量</label><input type="number" id="pwN" min="1"></div>
+      <div class="field"><label>基线转化率（%）</label><input type="number" id="pwBaseline" step="0.1"></div>
+      <div class="field"><label>实验组转化率（%）</label><input type="number" id="pwTest" step="0.1"></div>
+      <div class="field"><label>显著性水平</label>
+        <select id="pwAlpha"><option value="90">90%（α=0.10）</option><option value="95" selected>95%（α=0.05）</option><option value="99">99%（α=0.01）</option></select>
+      </div>
+    </div>
+    <button class="btn" onclick="calcPower()">计算功效</button>
+    <div id="powerResults"></div>
+    <details class="tutorial">
+      <summary>怎么读这个结果 & 常见错误</summary>
+      <div class="tutorial-body">
+        <h4>怎么读</h4>
+        <ul>
+          <li><strong>功效（Power）< 80%</strong> 意味着：即使两个版本之间真的存在你输入的这个差异，你的实验设计也有相当大的概率检测不出来（假阴性）——这不是"没有差异"的证据，只是"这次实验设计没能力发现它"。</li>
+        </ul>
+        <h4>常见错误</h4>
+        <ul>
+          <li><strong>事后功效计算（post-hoc power）</strong>——很多人在实验跑完、结果不显著后，回头算一下"功效"，用来给不显著的结果找补。这个用法在统计学界是有争议的，正确的用法是<strong>在实验开始前</strong>用它来规划样本量，而不是事后为结果辩护。</li>
+          <li><strong>把"功效不足"当成"两组没有差异"的证据</strong>——这是两码事：功效不足只说明这次实验没有足够的把握去发现差异，并不能说明差异不存在。</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <footer>
+    <p class="brand">Built by Grace Ge</p>
+    <p class="tagline">Building systems for better decisions.</p>
+    <p><a href="https://gracege.com" target="_blank" rel="noopener">https://gracege.com</a></p>
+    <p>本工具仅供参考，不构成专业统计或商业决策建议。若涉及重大业务决策，建议咨询专业统计人员。</p>
+  </footer>
+</div>
+
+<script>
+function erf(x){const sign=x>=0?1:-1;x=Math.abs(x);const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;const t=1/(1+p*x);const y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);return sign*y;}
+function normalCDF(x){return 0.5*(1+erf(x/Math.sqrt(2)));}
+function logGamma(x){const cof=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);let ser=1.000000000190015;for(let j=0;j<6;j++){y++;ser+=cof[j]/y;}return -tmp+Math.log(2.5066282746310005*ser/x);}
+function betacf(x,a,b){const MAXIT=100,EPS=3e-7,FPMIN=1e-30;const qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;for(let m=1;m<=MAXIT;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}return h;}
+function betai(a,b,x){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(logGamma(a+b)-logGamma(a)-logGamma(b)+a*Math.log(x)+b*Math.log(1-x));if(x<(a+1)/(a+b+2))return bt*betacf(x,a,b)/a;else return 1-bt*betacf(1-x,b,a)/b;}
+function tCDF(t,df){const x=df/(df+t*t);const p=betai(df/2,0.5,x)/2;return t>0?1-p:p;}
+function wilsonCI(x,n,z){const phat=x/n;const denom=1+(z*z)/n;const center=(phat+(z*z)/(2*n))/denom;const halfwidth=(z/denom)*Math.sqrt((phat*(1-phat))/n+(z*z)/(4*n*n));return [center-halfwidth,center+halfwidth];}
+const zAlpha={90:1.645,95:1.96,99:2.576};
+const zPower={80:0.8416,90:1.2816,95:1.6449};
+function switchTab(name){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));event.target.classList.add('active');document.getElementById('panel-'+name).classList.add('active');}
+function switchSizeMode(mode,btn){document.querySelectorAll('#panel-size .subtabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('size-ab').classList.toggle('active',mode==='ab');document.getElementById('size-pop').classList.toggle('active',mode==='pop');}
+function parseNums(str){return str.split(/[,，\s]+/).map(s=>parseFloat(s)).filter(n=>!isNaN(n));}
+function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length;}
+function stdev(arr){const m=mean(arr);const v=arr.reduce((a,b)=>a+(b-m)*(b-m),0)/(arr.length-1);return Math.sqrt(v);}
+function calcMean(){
+  const a=parseNums(document.getElementById('meanA').value);
+  const b=parseNums(document.getElementById('meanB').value);
+  const out=document.getElementById('meanResults');
+  if(a.length<2||b.length<2){out.innerHTML='<div class="results"><p style="color:#dc2626;">每组至少需要2个有效数值。</p></div>';return;}
+  const mA=mean(a),mB=mean(b),sA=stdev(a),sB=stdev(b),nA=a.length,nB=b.length;
+  const se=Math.sqrt(sA*sA/nA+sB*sB/nB);
+  const t=(mB-mA)/se;
+  const df=Math.pow(sA*sA/nA+sB*sB/nB,2)/(Math.pow(sA*sA/nA,2)/(nA-1)+Math.pow(sB*sB/nB,2)/(nB-1));
+  const p=2*(1-tCDF(Math.abs(t),df));
+  const relDiff=mA!==0?((mB-mA)/mA*100):null;
+  const sig=p<0.05;
+  out.innerHTML=`<div class="results"><h3>结果</h3>
+    <div class="result-row"><span>A 组均值 / 标准差 / n</span><span>${mA.toFixed(3)} / ${sA.toFixed(3)} / ${nA}</span></div>
+    <div class="result-row"><span>B 组均值 / 标准差 / n</span><span>${mB.toFixed(3)} / ${sB.toFixed(3)} / ${nB}</span></div>
+    <div class="result-row"><span>差值（B−A）</span><span>${(mB-mA).toFixed(4)} ${relDiff!==null?'('+relDiff.toFixed(2)+'%)':''}</span></div>
+    <div class="result-row"><span>t 值 / 自由度</span><span>${t.toFixed(4)} / ${df.toFixed(1)}</span></div>
+    <div class="result-row"><span>p 值</span><span>${p<0.001?'< 0.001':p.toFixed(4)}</span></div>
+    <div class="verdict ${sig?'sig':'nosig'}">${sig?'差异具有统计显著性 (p < 0.05)':'未观察到统计显著差异 (p ≥ 0.05)'}</div></div>`;
+}
+function calcProp(){
+  const cConv=parseInt(document.getElementById('propAConv').value);
+  const cSize=parseInt(document.getElementById('propASize').value);
+  const tConv=parseInt(document.getElementById('propBConv').value);
+  const tSize=parseInt(document.getElementById('propBSize').value);
+  const out=document.getElementById('propResults');
+  if([cConv,cSize,tConv,tSize].some(v=>isNaN(v))||cSize<=0||tSize<=0||cConv>cSize||tConv>tSize){out.innerHTML='<div class="results"><p style="color:#dc2626;">请输入有效数值，转化数不能超过样本量。</p></div>';return;}
+  const pA=cConv/cSize,pB=tConv/tSize;
+  const pPool=(cConv+tConv)/(cSize+tSize);
+  const se=Math.sqrt(pPool*(1-pPool)*(1/cSize+1/tSize));
+  const z=(pB-pA)/se;
+  const p=2*(1-normalCDF(Math.abs(z)));
+  const zCI=1.96;
+  const [lA,uA]=wilsonCI(cConv,cSize,zCI);
+  const [lB,uB]=wilsonCI(tConv,tSize,zCI);
+  const diff=pB-pA;
+  const ciLow=diff-Math.sqrt(Math.pow(pB-lB,2)+Math.pow(uA-pA,2));
+  const ciHigh=diff+Math.sqrt(Math.pow(uB-pB,2)+Math.pow(pA-lA,2));
+  const relLift=pA!==0?((pB-pA)/pA*100):null;
+  const sig=p<0.05;
+  out.innerHTML=`<div class="results"><h3>结果</h3>
+    <div class="result-row"><span>A 组转化率</span><span>${(pA*100).toFixed(2)}% (${cConv}/${cSize})</span></div>
+    <div class="result-row"><span>B 组转化率</span><span>${(pB*100).toFixed(2)}% (${tConv}/${tSize})</span></div>
+    <div class="result-row"><span>绝对差 / 相对提升</span><span>${((pB-pA)*100).toFixed(2)}pp ${relLift!==null?'/ '+relLift.toFixed(2)+'%':''}</span></div>
+    <div class="result-row"><span>Z 值</span><span>${z.toFixed(4)}</span></div>
+    <div class="result-row"><span>p 值</span><span>${p<0.001?'< 0.001':p.toFixed(4)}</span></div>
+    <div class="result-row"><span>95% 置信区间（差值，Newcombe 方法）</span><span>${(ciLow*100).toFixed(2)}% ~ ${(ciHigh*100).toFixed(2)}%</span></div>
+    <div class="verdict ${sig?'sig':'nosig'}">${sig?'差异具有统计显著性 (p < 0.05)':'未观察到统计显著差异 (p ≥ 0.05)'}</div></div>`;
+}
+function calcABSize(){
+  const p1=parseFloat(document.getElementById('abBaseline').value)/100;
+  const mdeVal=parseFloat(document.getElementById('abMDE').value);
+  const mdeType=document.getElementById('abMDEType').value;
+  const alpha=parseInt(document.getElementById('abAlpha').value);
+  const power=parseInt(document.getElementById('abPower').value);
+  const out=document.getElementById('abSizeResults');
+  if(isNaN(p1)||p1<=0||p1>=1||isNaN(mdeVal)||mdeVal<=0){out.innerHTML='<div class="results"><p style="color:#dc2626;">请输入有效的基线转化率与 MDE。</p></div>';return;}
+  const p2=mdeType==='relative'?p1*(1+mdeVal/100):p1+mdeVal/100;
+  if(p2<=0||p2>=1){out.innerHTML='<div class="results"><p style="color:#dc2626;">计算出的目标转化率超出 0-100% 范围，请调整 MDE。</p></div>';return;}
+  const za=zAlpha[alpha],zb=zPower[power];
+  const n=Math.ceil(Math.pow(za+zb,2)*(p1*(1-p1)+p2*(1-p2))/Math.pow(p2-p1,2));
+  out.innerHTML=`<div class="results"><h3>所需样本量</h3>
+    <div class="result-row"><span>基线转化率</span><span>${(p1*100).toFixed(2)}%</span></div>
+    <div class="result-row"><span>目标转化率</span><span>${(p2*100).toFixed(2)}%</span></div>
+    <div class="result-row"><span>每组所需样本量</span><span style="font-weight:700;color:var(--primary);">${n.toLocaleString()}</span></div>
+    <div class="result-row"><span>两组合计</span><span>${(n*2).toLocaleString()}</span></div></div>`;
+}
+function calcPopSize(){
+  const N=parseInt(document.getElementById('popN').value);
+  const conf=parseInt(document.getElementById('popConf').value);
+  const margin=parseFloat(document.getElementById('popMargin').value)/100;
+  const out=document.getElementById('popSizeResults');
+  if(isNaN(N)||N<=0||isNaN(margin)||margin<=0){out.innerHTML='<div class="results"><p style="color:#dc2626;">请输入有效的总体规模与误差范围。</p></div>';return;}
+  const z=zAlpha[conf];
+  const numerator=Math.pow(z,2)*0.25*N;
+  const denominator=Math.pow(margin,2)*(N-1)+Math.pow(z,2)*0.25;
+  const n=Math.ceil(numerator/denominator);
+  out.innerHTML=`<div class="results"><h3>所需样本量</h3>
+    <div class="result-row"><span>总体规模</span><span>${N.toLocaleString()}</span></div>
+    <div class="result-row"><span>所需样本量</span><span style="font-weight:700;color:var(--primary);">${n.toLocaleString()}</span></div></div>`;
+}
+function calcPower(){
+  const n=parseInt(document.getElementById('pwN').value);
+  const p1=parseFloat(document.getElementById('pwBaseline').value)/100;
+  const p2=parseFloat(document.getElementById('pwTest').value)/100;
+  const alpha=parseInt(document.getElementById('pwAlpha').value);
+  const out=document.getElementById('powerResults');
+  if(isNaN(n)||n<=0||isNaN(p1)||isNaN(p2)||p1<=0||p1>=1||p2<=0||p2>=1){out.innerHTML='<div class="results"><p style="color:#dc2626;">请输入有效数值。</p></div>';return;}
+  const za=zAlpha[alpha];
+  const seUnpooled=Math.sqrt(p1*(1-p1)/n+p2*(1-p2)/n);
+  const zEff=Math.abs(p2-p1)/seUnpooled;
+  const power=normalCDF(zEff-za);
+  out.innerHTML=`<div class="results"><h3>结果</h3>
+    <div class="result-row"><span>统计功效（Power）</span><span style="font-weight:700;color:var(--primary);">${(power*100).toFixed(1)}%</span></div>
+    <div class="result-row"><span>说明</span><span>${power>=0.8?'功效充足（≥80%）':'功效偏低，建议增加样本量'}</span></div></div>`;
+}
+</script>
+</body>
+</html>
