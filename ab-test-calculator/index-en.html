@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Systems Toolkit · A/B Test Toolkit | Grace Ge</title>
+<style>
+  :root{
+    --primary:#4f46e5;--primary-dark:#4338ca;--bg:#f8fafc;--card:#ffffff;
+    --text:#1e293b;--muted:#64748b;--border:#e2e8f0;--green:#16a34a;--amber:#d97706;--radius:12px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);padding:24px 12px 60px;}
+  .wrap{max-width:880px;margin:0 auto;}
+  header{text-align:center;margin-bottom:24px;}
+  header .kicker{font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--primary);font-weight:700;margin-bottom:6px;}
+  header h1{font-size:1.7rem;margin:0 0 4px;}
+  header p{color:var(--muted);margin:0;}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;background:var(--card);padding:6px;border-radius:var(--radius);box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:20px;}
+  .tab-btn{flex:1 1 auto;min-width:140px;padding:10px 14px;border:none;border-radius:8px;background:transparent;color:var(--muted);font-size:0.92rem;font-weight:600;cursor:pointer;transition:all .15s;}
+  .tab-btn.active{background:var(--primary);color:#fff;}
+  .panel{display:none;background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+  .panel.active{display:block;}
+  .panel h2{margin-top:0;font-size:1.3rem;}
+  .hint{color:var(--muted);font-size:0.88rem;margin-bottom:18px;line-height:1.5;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr;}}
+  label{display:block;font-size:0.9rem;font-weight:600;margin-bottom:6px;}
+  textarea,input,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:0.95rem;font-family:inherit;}
+  textarea{resize:vertical;}
+  .field{margin-bottom:16px;}
+  .btn{background:var(--primary);color:#fff;border:none;padding:12px 20px;border-radius:8px;font-size:0.95rem;font-weight:600;cursor:pointer;}
+  .btn:hover{background:var(--primary-dark);}
+  .subtabs{display:flex;gap:6px;margin-bottom:16px;}
+  .subtabs button{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:0.85rem;color:var(--muted);}
+  .subtabs button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  .sub-panel{display:none;}
+  .sub-panel.active{display:block;}
+  .results{margin-top:22px;padding:18px;background:#f1f5f9;border-radius:10px;}
+  .results h3{margin-top:0;}
+  .result-row{display:flex;justify-content:space-between;padding:4px 0;font-size:0.92rem;border-bottom:1px dashed var(--border);gap:12px;}
+  .result-row:last-child{border-bottom:none;}
+  .verdict{margin-top:12px;padding:10px 14px;border-radius:8px;font-weight:700;text-align:center;}
+  .verdict.sig{background:#dcfce7;color:var(--green);}
+  .verdict.nosig{background:#fef3c7;color:var(--amber);}
+  details.tutorial{margin-top:20px;border:1px solid var(--border);border-radius:10px;background:#fafbfc;overflow:hidden;}
+  details.tutorial summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:0.92rem;color:var(--primary-dark);list-style:none;display:flex;align-items:center;gap:8px;}
+  details.tutorial summary::-webkit-details-marker{display:none;}
+  details.tutorial summary::before{content:'▸';transition:transform .15s;}
+  details.tutorial[open] summary::before{transform:rotate(90deg);}
+  details.tutorial .tutorial-body{padding:0 16px 16px;font-size:0.88rem;line-height:1.7;color:var(--text);}
+  details.tutorial .tutorial-body h4{font-size:0.85rem;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;}
+  details.tutorial .tutorial-body h4:first-child{margin-top:0;}
+  details.tutorial .tutorial-body ul{margin:0;padding-left:20px;}
+  details.tutorial .tutorial-body li{margin-bottom:6px;}
+  details.tutorial .tutorial-body li strong{color:var(--text);}
+  footer{text-align:center;color:var(--muted);font-size:0.8rem;margin-top:30px;line-height:1.6;}
+  footer .brand{font-weight:600;color:var(--text);}
+  footer .tagline{color:var(--muted);}
+  footer a{color:var(--primary);text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Decision Systems Toolkit</div>
+    <h1>A/B Test Toolkit</h1>
+    <p>Mean Comparison · Proportion Comparison · Sample Size Calculator · Statistical Power</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('mean')">Mean Comparison</button>
+    <button class="tab-btn" onclick="switchTab('prop')">Proportion Comparison</button>
+    <button class="tab-btn" onclick="switchTab('size')">Sample Size</button>
+    <button class="tab-btn" onclick="switchTab('power')">Statistical Power</button>
+  </div>
+
+  <div id="panel-mean" class="panel active">
+    <h2>Mean Comparison (T-Test)</h2>
+    <p class="hint">Use this to compare average values between two groups of continuous numeric data — e.g. time on page, order value, average spend. Enter numbers separated by commas or spaces.</p>
+    <div class="grid2">
+      <div class="field"><label>Control Group (A) Data</label><textarea id="meanA" rows="5" placeholder="e.g. 42, 38, 45, 40, 39"></textarea></div>
+      <div class="field"><label>Test Group (B) Data</label><textarea id="meanB" rows="5" placeholder="e.g. 45, 42, 48, 44, 47"></textarea></div>
+    </div>
+    <button class="btn" onclick="calcMean()">Calculate Results</button>
+    <div id="meanResults"></div>
+    <details class="tutorial">
+      <summary>How to Read This & Common Mistakes</summary>
+      <div class="tutorial-body">
+        <h4>How to Read It</h4>
+        <ul>
+          <li><strong>p < 0.05</strong> means this difference is unlikely to be pure random noise — but it <strong>does not tell you how large or how important the difference is</strong>. Always look at the raw difference and relative difference together to judge whether it's worth acting on in business terms.</li>
+          <li><strong>Degrees of freedom (df)</strong> closer to n_A + n_B means the two groups have similar variance; a noticeably lower value means the groups' spread differs more — this is normal, and the tool automatically corrects for it using Welch's t-test, so no manual adjustment is needed.</li>
+        </ul>
+        <h4>Common Mistakes</h4>
+        <ul>
+          <li><strong>Peeking mid-test and adding more samples when the result isn't significant yet</strong> — this is the most common source of false positives. Decide on a sample size or test duration before you start, run it to completion, and don't make calls based on interim results.</li>
+          <li><strong>Small samples (under 30 per group) with clearly non-normal data</strong> make the t-test less reliable — collect more data, or use a non-parametric method instead.</li>
+          <li><strong>Treating "statistically significant" as the same thing as "practically important"</strong> — with a large enough sample, even a tiny, meaningless difference can produce p < 0.05. Always check the relative difference too.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="panel-prop" class="panel">
+    <h2>Proportion Comparison (Z-Test)</h2>
+    <p class="hint">Use this to compare conversion rates, click-through rates, open rates, or other proportion-based metrics between two versions.</p>
+    <div class="grid2">
+      <div>
+        <h3 style="margin:0 0 8px;font-size:1rem;">Control Group (A)</h3>
+        <div class="field"><label>Conversions</label><input type="number" id="propAConv" min="0"></div>
+        <div class="field"><label>Total Sample Size</label><input type="number" id="propASize" min="1"></div>
+      </div>
+      <div>
+        <h3 style="margin:0 0 8px;font-size:1rem;">Test Group (B)</h3>
+        <div class="field"><label>Conversions</label><input type="number" id="propBConv" min="0"></div>
+        <div class="field"><label>Total Sample Size</label><input type="number" id="propBSize" min="1"></div>
+      </div>
+    </div>
+    <button class="btn" onclick="calcProp()">Calculate Results</button>
+    <div id="propResults"></div>
+    <details class="tutorial">
+      <summary>How to Read This & Common Mistakes</summary>
+      <div class="tutorial-body">
+        <h4>How to Read It</h4>
+        <ul>
+          <li>The <strong>95% confidence interval</strong> is more informative than the p-value alone — it tells you the plausible range for the true difference. If the interval crosses zero (one end positive, one negative), the evidence isn't strong enough to establish direction. This tool computes the interval using the <strong>Newcombe (Wilson score) method</strong>, which is more robust than the simple normal approximation (Wald interval) taught in most textbooks, especially with small samples or rates near 0%/100% — it won't produce an impossible negative lower bound.</li>
+          <li>Look at both the <strong>absolute difference (percentage points)</strong> and the <strong>relative lift (%)</strong>: going from a 1% to a 2% conversion rate is a 100% relative lift, but only 1 percentage point in absolute terms — these tell different stories, so report both.</li>
+          <li><strong>In extreme edge cases with very small samples, the p-value and confidence interval can appear to disagree</strong> — the p-value relies on a normal approximation, while the interval uses Wilson score, and they aren't built on quite the same mathematical framework. Occasionally you may see p < 0.05 while the interval still sits right around zero. This is a known property of the two methods, not a calculation error — with very small samples, treat both numbers cautiously and prefer collecting more data.</li>
+        </ul>
+        <h4>Common Mistakes</h4>
+        <ul>
+          <li><strong>Very small conversion counts (single digits)</strong> make the normal approximation behind the p-value unreliable — treat results as indicative only and gather more data before concluding anything.</li>
+          <li><strong>Ignoring test duration</strong> — even if you've hit your target sample size, stopping after just a day or two can leave results contaminated by time-of-week effects. Run at least one full business cycle (e.g. a full week covering both weekdays and weekends).</li>
+          <li><strong>Looking only at relative lift, not the absolute base</strong> — a "doubling" on a tiny base often isn't as dramatic in business terms as it sounds. Convert to absolute numbers before making a decision.</li>
+          <li><strong>Watching too many metrics at once and reporting whichever one comes up significant</strong> — if you're monitoring conversion rate, average order value, time on page, and more all at once, test enough metrics and something will look "significant" by chance alone. This is the multiple comparisons problem. Decide on one primary metric before the test starts, and treat everything else as supporting context — not as the basis for your verdict.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="panel-size" class="panel">
+    <h2>Sample Size Calculator</h2>
+    <div class="subtabs">
+      <button class="active" onclick="switchSizeMode('ab', this)">A/B Test Mode</button>
+      <button onclick="switchSizeMode('pop', this)">Population Survey Mode</button>
+    </div>
+    <div id="size-ab" class="sub-panel active">
+      <p class="hint">Estimate the sample size needed per group based on your baseline conversion rate and the minimum effect you want to be able to detect (MDE). This is the formula to use for actual A/B testing.</p>
+      <div class="grid2">
+        <div class="field"><label>Baseline Conversion Rate (%)</label><input type="number" id="abBaseline" step="0.1" placeholder="e.g. 5"></div>
+        <div class="field"><label>Minimum Detectable Effect (MDE)</label><input type="number" id="abMDE" step="0.1" placeholder="e.g. 20"></div>
+        <div class="field"><label>MDE Type</label>
+          <select id="abMDEType"><option value="relative">Relative Lift (%)</option><option value="absolute">Absolute Lift (percentage points)</option></select>
+        </div>
+        <div class="field"><label>Significance Level</label>
+          <select id="abAlpha"><option value="90">90% (α = 0.10)</option><option value="95" selected>95% (α = 0.05)</option><option value="99">99% (α = 0.01)</option></select>
+        </div>
+        <div class="field"><label>Statistical Power</label>
+          <select id="abPower"><option value="80" selected>80%</option><option value="90">90%</option><option value="95">95%</option></select>
+        </div>
+      </div>
+      <button class="btn" onclick="calcABSize()">Calculate Sample Size</button>
+      <div id="abSizeResults"></div>
+    </div>
+    <div id="size-pop" class="sub-panel">
+      <p class="hint">When your total population is limited (e.g. an internal staff survey or an existing customer list), calculate the required sample size using the finite population correction.</p>
+      <div class="grid2">
+        <div class="field"><label>Population Size (N)</label><input type="number" id="popN" min="1"></div>
+        <div class="field"><label>Confidence Level</label>
+          <select id="popConf"><option value="90">90%</option><option value="95" selected>95%</option><option value="99">99%</option></select>
+        </div>
+        <div class="field"><label>Margin of Error (%)</label><input type="number" id="popMargin" value="5"></div>
+      </div>
+      <button class="btn" onclick="calcPopSize()">Calculate Sample Size</button>
+      <div id="popSizeResults"></div>
+    </div>
+    <details class="tutorial">
+      <summary>How to Read This & Common Mistakes</summary>
+      <div class="tutorial-body">
+        <h4>The Difference Between the Two Modes (easiest thing to mix up)</h4>
+        <ul>
+          <li><strong>A/B Test Mode</strong> answers: "How many people do I need per group to reliably detect a difference of a given size between two versions?" This involves the concept of "detecting an effect," so you first assume a baseline conversion rate and the minimum lift you want to catch (MDE).</li>
+          <li><strong>Population Survey Mode</strong> answers a completely different question: "I have a population of known size — how many do I need to sample to keep my survey's margin of error within a given range?" There's no "comparing two groups" concept here — it's purely descriptive sampling.</li>
+          <li><strong>The two formulas are not interchangeable</strong> — using the population-survey sample size for an A/B test will almost always underestimate what you actually need, because it doesn't account for the statistical power required to detect a difference between two groups.</li>
+          <li><strong>The A/B Test Mode formula assumes an even 50/50 traffic split</strong> between the two groups. If your test design uses an uneven split (e.g. 90/10), the total sample size you'll actually need is higher than what's shown here — that requires a different, unequal-allocation version of the formula.</li>
+        </ul>
+        <h4>Common Mistakes</h4>
+        <ul>
+          <li><strong>The smaller the MDE, the larger the required sample size</strong> — and not linearly. If you're trying to detect a very small difference, the sample size can become unrealistic; reconsider whether the effect size you're targeting is reasonable.</li>
+          <li><strong>Even after reaching the calculated sample size, run at least one full business cycle</strong> — stopping after just 2 days can still leave results contaminated by time effects (e.g. a different weekend traffic mix).</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <div id="panel-power" class="panel">
+    <h2>Statistical Power Calculator</h2>
+    <p class="hint">Given a per-group sample size, work out the statistical power your test can achieve — the probability you'll detect a real difference if one exists.</p>
+    <div class="grid2">
+      <div class="field"><label>Sample Size per Group</label><input type="number" id="pwN" min="1"></div>
+      <div class="field"><label>Baseline Conversion Rate (%)</label><input type="number" id="pwBaseline" step="0.1"></div>
+      <div class="field"><label>Test Group Conversion Rate (%)</label><input type="number" id="pwTest" step="0.1"></div>
+      <div class="field"><label>Significance Level</label>
+        <select id="pwAlpha"><option value="90">90% (α = 0.10)</option><option value="95" selected>95% (α = 0.05)</option><option value="99">99% (α = 0.01)</option></select>
+      </div>
+    </div>
+    <button class="btn" onclick="calcPower()">Calculate Power</button>
+    <div id="powerResults"></div>
+    <details class="tutorial">
+      <summary>How to Read This & Common Mistakes</summary>
+      <div class="tutorial-body">
+        <h4>How to Read It</h4>
+        <ul>
+          <li><strong>Power below 80%</strong> means: even if the difference you entered genuinely exists between the two versions, your test design has a substantial chance of failing to detect it (a false negative). This is not evidence of "no difference" — it just means this particular test design lacks the ability to find it.</li>
+        </ul>
+        <h4>Common Mistakes</h4>
+        <ul>
+          <li><strong>Post-hoc power calculations</strong> — many people, after a test comes back non-significant, calculate power afterward to explain away the result ("power was too low, so it doesn't mean there's no difference"). This use is contested in the statistics field. The correct use is to calculate power <strong>before the experiment starts</strong>, to plan sample size — not to defend a result after the fact.</li>
+          <li><strong>Treating "power is insufficient" as evidence that "the two groups have no difference"</strong> — these are two different things: insufficient power only means this particular experiment lacked the ability to detect a difference; it says nothing about whether a difference actually exists.</li>
+        </ul>
+      </div>
+    </details>
+  </div>
+
+  <footer>
+    <p class="brand">Built by Grace Ge</p>
+    <p class="tagline">Building systems for better decisions.</p>
+    <p><a href="https://gracege.com" target="_blank" rel="noopener">https://gracege.com</a></p>
+    <p>This tool is provided for reference only and does not constitute professional statistical or business advice. For decisions with significant business impact, please consult a qualified statistician.</p>
+  </footer>
+</div>
+
+<script>
+function erf(x){const sign=x>=0?1:-1;x=Math.abs(x);const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;const t=1/(1+p*x);const y=1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);return sign*y;}
+function normalCDF(x){return 0.5*(1+erf(x/Math.sqrt(2)));}
+function logGamma(x){const cof=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,tmp=x+5.5;tmp-=(x+0.5)*Math.log(tmp);let ser=1.000000000190015;for(let j=0;j<6;j++){y++;ser+=cof[j]/y;}return -tmp+Math.log(2.5066282746310005*ser/x);}
+function betacf(x,a,b){const MAXIT=100,EPS=3e-7,FPMIN=1e-30;const qab=a+b,qap=a+1,qam=a-1;let c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;for(let m=1;m<=MAXIT;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}return h;}
+function betai(a,b,x){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(logGamma(a+b)-logGamma(a)-logGamma(b)+a*Math.log(x)+b*Math.log(1-x));if(x<(a+1)/(a+b+2))return bt*betacf(x,a,b)/a;else return 1-bt*betacf(1-x,b,a)/b;}
+function tCDF(t,df){const x=df/(df+t*t);const p=betai(df/2,0.5,x)/2;return t>0?1-p:p;}
+function wilsonCI(x,n,z){const phat=x/n;const denom=1+(z*z)/n;const center=(phat+(z*z)/(2*n))/denom;const halfwidth=(z/denom)*Math.sqrt((phat*(1-phat))/n+(z*z)/(4*n*n));return [center-halfwidth,center+halfwidth];}
+const zAlpha={90:1.645,95:1.96,99:2.576};
+const zPower={80:0.8416,90:1.2816,95:1.6449};
+function switchTab(name){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));event.target.classList.add('active');document.getElementById('panel-'+name).classList.add('active');}
+function switchSizeMode(mode,btn){document.querySelectorAll('#panel-size .subtabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('size-ab').classList.toggle('active',mode==='ab');document.getElementById('size-pop').classList.toggle('active',mode==='pop');}
+function parseNums(str){return str.split(/[,\s]+/).map(s=>parseFloat(s)).filter(n=>!isNaN(n));}
+function mean(arr){return arr.reduce((a,b)=>a+b,0)/arr.length;}
+function stdev(arr){const m=mean(arr);const v=arr.reduce((a,b)=>a+(b-m)*(b-m),0)/(arr.length-1);return Math.sqrt(v);}
+function calcMean(){
+  const a=parseNums(document.getElementById('meanA').value);
+  const b=parseNums(document.getElementById('meanB').value);
+  const out=document.getElementById('meanResults');
+  if(a.length<2||b.length<2){out.innerHTML='<div class="results"><p style="color:#dc2626;">Each group needs at least 2 valid values.</p></div>';return;}
+  const mA=mean(a),mB=mean(b),sA=stdev(a),sB=stdev(b),nA=a.length,nB=b.length;
+  const se=Math.sqrt(sA*sA/nA+sB*sB/nB);
+  const t=(mB-mA)/se;
+  const df=Math.pow(sA*sA/nA+sB*sB/nB,2)/(Math.pow(sA*sA/nA,2)/(nA-1)+Math.pow(sB*sB/nB,2)/(nB-1));
+  const p=2*(1-tCDF(Math.abs(t),df));
+  const relDiff=mA!==0?((mB-mA)/mA*100):null;
+  const sig=p<0.05;
+  out.innerHTML=`<div class="results"><h3>Results</h3>
+    <div class="result-row"><span>Group A Mean / SD / n</span><span>${mA.toFixed(3)} / ${sA.toFixed(3)} / ${nA}</span></div>
+    <div class="result-row"><span>Group B Mean / SD / n</span><span>${mB.toFixed(3)} / ${sB.toFixed(3)} / ${nB}</span></div>
+    <div class="result-row"><span>Difference (B−A)</span><span>${(mB-mA).toFixed(4)} ${relDiff!==null?'('+relDiff.toFixed(2)+'%)':''}</span></div>
+    <div class="result-row"><span>t-value / Degrees of Freedom</span><span>${t.toFixed(4)} / ${df.toFixed(1)}</span></div>
+    <div class="result-row"><span>p-value</span><span>${p<0.001?'< 0.001':p.toFixed(4)}</span></div>
+    <div class="verdict ${sig?'sig':'nosig'}">${sig?'Statistically significant difference (p < 0.05)':'No statistically significant difference (p ≥ 0.05)'}</div></div>`;
+}
+function calcProp(){
+  const cConv=parseInt(document.getElementById('propAConv').value);
+  const cSize=parseInt(document.getElementById('propASize').value);
+  const tConv=parseInt(document.getElementById('propBConv').value);
+  const tSize=parseInt(document.getElementById('propBSize').value);
+  const out=document.getElementById('propResults');
+  if([cConv,cSize,tConv,tSize].some(v=>isNaN(v))||cSize<=0||tSize<=0||cConv>cSize||tConv>tSize){out.innerHTML='<div class="results"><p style="color:#dc2626;">Please enter valid numbers. Conversions cannot exceed sample size.</p></div>';return;}
+  const pA=cConv/cSize,pB=tConv/tSize;
+  const pPool=(cConv+tConv)/(cSize+tSize);
+  const se=Math.sqrt(pPool*(1-pPool)*(1/cSize+1/tSize));
+  const z=(pB-pA)/se;
+  const p=2*(1-normalCDF(Math.abs(z)));
+  const zCI=1.96;
+  const [lA,uA]=wilsonCI(cConv,cSize,zCI);
+  const [lB,uB]=wilsonCI(tConv,tSize,zCI);
+  const diff=pB-pA;
+  const ciLow=diff-Math.sqrt(Math.pow(pB-lB,2)+Math.pow(uA-pA,2));
+  const ciHigh=diff+Math.sqrt(Math.pow(uB-pB,2)+Math.pow(pA-lA,2));
+  const relLift=pA!==0?((pB-pA)/pA*100):null;
+  const sig=p<0.05;
+  out.innerHTML=`<div class="results"><h3>Results</h3>
+    <div class="result-row"><span>Group A Conversion Rate</span><span>${(pA*100).toFixed(2)}% (${cConv}/${cSize})</span></div>
+    <div class="result-row"><span>Group B Conversion Rate</span><span>${(pB*100).toFixed(2)}% (${tConv}/${tSize})</span></div>
+    <div class="result-row"><span>Absolute Diff / Relative Lift</span><span>${((pB-pA)*100).toFixed(2)}pp ${relLift!==null?'/ '+relLift.toFixed(2)+'%':''}</span></div>
+    <div class="result-row"><span>Z-score</span><span>${z.toFixed(4)}</span></div>
+    <div class="result-row"><span>p-value</span><span>${p<0.001?'< 0.001':p.toFixed(4)}</span></div>
+    <div class="result-row"><span>95% CI (difference, Newcombe method)</span><span>${(ciLow*100).toFixed(2)}% ~ ${(ciHigh*100).toFixed(2)}%</span></div>
+    <div class="verdict ${sig?'sig':'nosig'}">${sig?'Statistically significant difference (p < 0.05)':'No statistically significant difference (p ≥ 0.05)'}</div></div>`;
+}
+function calcABSize(){
+  const p1=parseFloat(document.getElementById('abBaseline').value)/100;
+  const mdeVal=parseFloat(document.getElementById('abMDE').value);
+  const mdeType=document.getElementById('abMDEType').value;
+  const alpha=parseInt(document.getElementById('abAlpha').value);
+  const power=parseInt(document.getElementById('abPower').value);
+  const out=document.getElementById('abSizeResults');
+  if(isNaN(p1)||p1<=0||p1>=1||isNaN(mdeVal)||mdeVal<=0){out.innerHTML='<div class="results"><p style="color:#dc2626;">Please enter a valid baseline conversion rate and MDE.</p></div>';return;}
+  const p2=mdeType==='relative'?p1*(1+mdeVal/100):p1+mdeVal/100;
+  if(p2<=0||p2>=1){out.innerHTML='<div class="results"><p style="color:#dc2626;">Calculated target conversion rate is outside the 0–100% range — please adjust the MDE.</p></div>';return;}
+  const za=zAlpha[alpha],zb=zPower[power];
+  const n=Math.ceil(Math.pow(za+zb,2)*(p1*(1-p1)+p2*(1-p2))/Math.pow(p2-p1,2));
+  out.innerHTML=`<div class="results"><h3>Required Sample Size</h3>
+    <div class="result-row"><span>Baseline Conversion Rate</span><span>${(p1*100).toFixed(2)}%</span></div>
+    <div class="result-row"><span>Target Conversion Rate</span><span>${(p2*100).toFixed(2)}%</span></div>
+    <div class="result-row"><span>Sample Size Needed per Group</span><span style="font-weight:700;color:var(--primary);">${n.toLocaleString()}</span></div>
+    <div class="result-row"><span>Combined Total (Both Groups)</span><span>${(n*2).toLocaleString()}</span></div></div>`;
+}
+function calcPopSize(){
+  const N=parseInt(document.getElementById('popN').value);
+  const conf=parseInt(document.getElementById('popConf').value);
+  const margin=parseFloat(document.getElementById('popMargin').value)/100;
+  const out=document.getElementById('popSizeResults');
+  if(isNaN(N)||N<=0||isNaN(margin)||margin<=0){out.innerHTML='<div class="results"><p style="color:#dc2626;">Please enter a valid population size and margin of error.</p></div>';return;}
+  const z=zAlpha[conf];
+  const numerator=Math.pow(z,2)*0.25*N;
+  const denominator=Math.pow(margin,2)*(N-1)+Math.pow(z,2)*0.25;
+  const n=Math.ceil(numerator/denominator);
+  out.innerHTML=`<div class="results"><h3>Required Sample Size</h3>
+    <div class="result-row"><span>Population Size</span><span>${N.toLocaleString()}</span></div>
+    <div class="result-row"><span>Sample Size Needed</span><span style="font-weight:700;color:var(--primary);">${n.toLocaleString()}</span></div></div>`;
+}
+function calcPower(){
+  const n=parseInt(document.getElementById('pwN').value);
+  const p1=parseFloat(document.getElementById('pwBaseline').value)/100;
+  const p2=parseFloat(document.getElementById('pwTest').value)/100;
+  const alpha=parseInt(document.getElementById('pwAlpha').value);
+  const out=document.getElementById('powerResults');
+  if(isNaN(n)||n<=0||isNaN(p1)||isNaN(p2)||p1<=0||p1>=1||p2<=0||p2>=1){out.innerHTML='<div class="results"><p style="color:#dc2626;">Please enter valid numbers.</p></div>';return;}
+  const za=zAlpha[alpha];
+  const seUnpooled=Math.sqrt(p1*(1-p1)/n+p2*(1-p2)/n);
+  const zEff=Math.abs(p2-p1)/seUnpooled;
+  const power=normalCDF(zEff-za);
+  out.innerHTML=`<div class="results"><h3>Results</h3>
+    <div class="result-row"><span>Statistical Power</span><span style="font-weight:700;color:var(--primary);">${(power*100).toFixed(1)}%</span></div>
+    <div class="result-row"><span>Note</span><span>${power>=0.8?'Power is sufficient (≥80%)':'Power is low — consider increasing sample size'}</span></div></div>`;
+}
+</script>
+</body>
+</html>
