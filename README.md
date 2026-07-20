@@ -20,7 +20,11 @@ Four calculators for common experimentation decisions:
 
 Each tab includes a "how to read this & common mistakes" section covering the failure modes that matter: peeking mid-test, confusing statistical significance with practical importance, post-hoc power, multiple comparisons.
 
-**[English version](ab-test-calculator/index-en.html)** · **[中文版](ab-test-calculator/index-cn.html)**
+**[English version](ab-test-calculator/index-en.html)**
+![English version screenshot](ab-test-calculator-demo-en.jpg)
+
+**[中文版](ab-test-calculator/index-cn.html)**
+![Chinese version screenshot](ab-test-calculator-demo-cn.jpg)
 
 ## Notes on the statistics
 
