@@ -1,8 +1,11 @@
 # Decision Systems Toolkit
 
-Small, practical tools for making better decisions with data.
+A growing collection of practical decision tools built with analytics, statistics, and AI.
 
 Each tool runs entirely in your browser. No account, no installation, no data leaves your machine.
+
+## Live Demo
+https://gracege.com/tools/ab-test-calculator
 
 ## Tools
 
@@ -26,11 +29,12 @@ Each tab includes a "how to read this & common mistakes" section covering the fa
 - Welch's correction is applied by default for mean comparison — no assumption of equal variances.
 - All statistical functions (erf, incomplete beta, t-distribution CDF, Wilson score) are implemented directly in plain JavaScript. No external libraries, no CDN dependencies. The files work offline.
 
-## Why this exists
+## Why I built this
 
 Most A/B test calculators give you a number and stop. The harder part is knowing what the number means and when not to trust it.
 
-Built by [Grace Ge](https://gracege.com) — Analytics & Decision Systems.
+Built by [Grace Ge](https://gracege.com).
+Building systems for better decisions.
 
 More tools coming.
 
