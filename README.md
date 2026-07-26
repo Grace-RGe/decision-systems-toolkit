@@ -4,38 +4,18 @@ A growing collection of practical decision tools built with analytics, statistic
 
 Each tool runs entirely in your browser. No account, no installation, no data leaves your machine.
 
-## Live Demo
-https://gracege.com/tools/ab-test-calculator
-
 ## Tools
 
-### A/B Test Calculator
+| Tool | What it answers | |
+|---|---|---|
+| **[A/B Test Calculator](ab-test-calculator/)** | Is this result real, and can you trust it? | [Live demo](https://gracege.com/tools/ab-test-calculator/toolkit) |
+| **[Meeting Reality Check](meeting-reality-check/)** | What does this meeting cost, and is it worth it? | [Live demo](https://gracege.com/tools/meeting-reality-check/toolkit) |
 
-Four calculators for common experimentation decisions:
+Each tool has its own folder with full documentation — click a tool name above.
 
-- **Mean Comparison** — Welch's t-test for continuous metrics (revenue, order value, time on page)
-- **Proportion Comparison** — z-test for conversion rates, with Newcombe (Wilson score) confidence intervals
-- **Sample Size** — separate modes for A/B tests (baseline + MDE + power) and finite-population surveys
-- **Statistical Power** — work out whether your test can actually detect the effect you care about
+## Why I build these
 
-Each tab includes a "how to read this & common mistakes" section covering the failure modes that matter: peeking mid-test, confusing statistical significance with practical importance, post-hoc power, multiple comparisons.
-
-**[English version](ab-test-calculator/index-en.html)**
-![English version screenshot](ab-test-calculator-demo-en.jpg)
-
-**[中文版](ab-test-calculator/index-cn.html)**
-![Chinese version screenshot](ab-test-calculator-demo-cn.jpg)
-
-## Notes on the statistics
-
-- Confidence intervals for proportions use the **Newcombe method** (Wilson score hybrid) rather than the simple Wald interval. Wald breaks down with small samples or rates near 0%/100% — it can produce impossible negative bounds. Newcombe doesn't.
-- The significance test uses a pooled z-test (assuming equal proportions under the null); the interval uses the unpooled Newcombe approach. These are built on different frameworks, so in extreme small-sample cases they can appear to disagree. That's a known property, not a bug.
-- Welch's correction is applied by default for mean comparison — no assumption of equal variances.
-- All statistical functions (erf, incomplete beta, t-distribution CDF, Wilson score) are implemented directly in plain JavaScript. No external libraries, no CDN dependencies. The files work offline.
-
-## Why I built this
-
-Most A/B test calculators give you a number and stop. The harder part is knowing what the number means and when not to trust it.
+Most tools give you a number and stop. The harder part is knowing what the number means, when not to trust it, and what it shouldn't be used for.
 
 Built by [Grace Ge](https://gracege.com).
 Building systems for better decisions.
