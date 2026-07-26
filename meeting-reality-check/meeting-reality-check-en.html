@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<!--
+  Meeting Reality Check — part of the Decision Systems Toolkit
+  Built by Grace Ge · https://gracege.com
+
+  Single file. No dependencies, no build step, no tracking, no storage.
+  Everything runs in the browser; nothing typed here leaves the device.
+
+  Design principle this tool is held to:
+    It optimizes for intentional meetings, not cheap ones.
+    It never recommends removing people as a way to save money.
+    People attending to learn are treated as investment, not overhead.
+
+  License: TODO
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meeting Reality Check — Decision Systems Toolkit</title>
+<meta name="description" content="Work out what a meeting actually costs, then judge whether it was designed well. Free, runs entirely in your browser.">
+<style>
+  :root{
+    --ink:#111110;
+    --ink-2:#5C5C57;
+    --ink-3:#8A8A83;
+    --paper:#FFFFFF;
+    --bill:#F7F7F4;
+    --rule:#E5E5E0;
+    --rule-2:#D3D3CC;
+    --stamp:#8C2F39;
+    --stamp-soft:#F6EBEC;
+    --good:#2F6B4F;
+    --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    --r:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-sans);
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:26px 20px 110px}
+
+  /* ---------- masthead ---------- */
+  .eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+  h1{font-size:clamp(32px,5.8vw,50px);line-height:1.03;letter-spacing:-.035em;font-weight:700;margin:12px 0 8px}
+  .sub{font-family:var(--font-mono);font-size:13px;color:var(--stamp);margin:0}
+  .intro{max-width:54ch;color:var(--ink-2);margin:13px 0 26px;font-size:15px;line-height:1.55}
+
+  /* ---------- layout ----------
+     Mobile: one flex column; the wrappers dissolve so every card is a direct
+     child and `order` can interleave inputs with results.
+     Desktop: row 1 is two independent columns (inputs | results) so they can
+     end at different heights without grid stretching them; row 2 is a
+     three-across band; the closing insight spans the full width. */
+  .cols{display:flex;flex-direction:column;gap:16px}
+  .col-a,.col-b,.col-c{display:contents}
+  .o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}
+  .o5{order:5}.o6{order:6}.o7{order:7}.o8{order:8}.o9{order:9}
+  @media(min-width:920px){
+    .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+    .col-a,.col-b{display:block}
+    .col-a{grid-column:1}
+    .col-b{grid-column:2}
+    .col-a > * + *,.col-b > * + *{margin-top:16px}
+    /* three across when there is room for it, two when there isn't — no second
+       breakpoint needed, and the cards never get squeezed below a readable width */
+    .col-c{display:grid;grid-column:1 / -1;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;align-items:start}
+    .insight{grid-column:1 / -1}
+  }
+
+  .card{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:17px 18px}
+  .card-title{
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-3);margin:0 0 14px;display:flex;align-items:center;gap:9px;
+  }
+  .card-title::after{content:"";flex:1;height:1px;background:var(--rule)}
+  .opt{color:var(--ink-3);text-transform:none;letter-spacing:0;font-size:11px}
+
+  /* ---------- fields ---------- */
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  label,.lbl{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+  .help{font-size:12.5px;color:var(--ink-3);margin:5px 0 0;line-height:1.45}
+  .row{display:flex;gap:9px}
+  .row > *{min-width:0}
+
+  input[type="number"],input[type="text"],select{
+    width:100%;font-family:var(--font-mono);font-size:16px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--rule-2);border-radius:9px;
+    padding:10px 11px;appearance:none;transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%238A8A83'/></svg>");
+    background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;
+  }
+  input:focus-visible,select:focus-visible,button:focus-visible,.chip:focus-visible,summary:focus-visible{
+    outline:2px solid var(--stamp);outline-offset:2px;
+  }
+  input:focus,select:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(17,17,16,.06);outline:none}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+
+  .stepper{display:flex;border:1px solid var(--rule-2);border-radius:9px;overflow:hidden}
+  .stepper input{border:0;border-radius:0;text-align:center;font-size:16px}
+  .stepper input:focus{box-shadow:none}
+  .stepper button{
+    flex:none;width:42px;background:var(--bill);border:0;cursor:pointer;
+    font-family:var(--font-mono);font-size:16px;color:var(--ink-2);transition:background .15s ease;
+  }
+  .stepper button:hover{background:var(--rule)}
+
+  .seg{display:flex;border:1px solid var(--rule-2);border-radius:9px;overflow:hidden;flex:none}
+  .seg button{
+    background:var(--paper);border:0;padding:10px 11px;cursor:pointer;
+    font-family:var(--font-mono);font-size:12px;color:var(--ink-3);white-space:nowrap;
+    transition:background .15s ease,color .15s ease;
+  }
+  .seg button + button{border-left:1px solid var(--rule-2)}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{
+    background:var(--paper);border:1px solid var(--rule-2);border-radius:999px;padding:7px 13px;
+    font-family:var(--font-mono);font-size:12.5px;color:var(--ink-2);cursor:pointer;
+    transition:background .15s ease,color .15s ease,border-color .15s ease;
+  }
+  .chip:hover{border-color:var(--ink-3)}
+  .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+
+  .slider-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+  .slider-val{font-family:var(--font-mono);font-size:12.5px;color:var(--stamp);text-align:right}
+  input[type="range"]{width:100%;appearance:none;background:transparent;margin:4px 0 0}
+  input[type="range"]::-webkit-slider-runnable-track{
+    height:4px;border-radius:99px;background:linear-gradient(to right,var(--stamp) var(--fill,50%),var(--rule) var(--fill,50%));
+  }
+  input[type="range"]::-moz-range-track{height:4px;border-radius:99px;background:var(--rule)}
+  input[type="range"]::-moz-range-progress{height:4px;border-radius:99px;background:var(--stamp)}
+  input[type="range"]::-webkit-slider-thumb{
+    appearance:none;width:19px;height:19px;border-radius:50%;background:var(--paper);
+    border:2px solid var(--stamp);margin-top:-7.5px;cursor:grab;box-shadow:0 1px 3px rgba(0,0,0,.12);
+  }
+  input[type="range"]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--paper);border:2px solid var(--stamp);cursor:grab}
+  .scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);margin-top:7px}
+
+  .note{
+    font-size:12.5px;line-height:1.5;color:var(--ink-2);background:var(--bill);
+    border-left:2px solid var(--good);border-radius:0 8px 8px 0;padding:9px 11px;margin-top:9px;
+  }
+  .note[hidden]{display:none}
+
+  details{border:1px solid var(--rule);border-radius:var(--r);background:var(--paper)}
+  details > summary{
+    cursor:pointer;list-style:none;padding:14px 18px;
+    font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+    display:flex;align-items:center;gap:8px;
+  }
+  details > summary::-webkit-details-marker{display:none}
+  details > summary::before{content:"+";font-size:14px;line-height:1;color:var(--ink-3)}
+  details[open] > summary::before{content:"–"}
+  .det-body{padding:0 18px 16px}
+
+  /* ---------- the bill ---------- */
+  .bill{background:var(--bill);border:1px solid var(--rule);border-radius:var(--r);padding:20px 18px 22px}
+  .bill-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);text-align:center;padding-bottom:12px}
+  .perf{height:1px;background:repeating-linear-gradient(to right,var(--rule-2) 0 5px,transparent 5px 10px);margin:0 -18px 16px}
+  .line-desc{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-2);text-align:center;margin-bottom:16px}
+  .total-label{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);text-align:center}
+  .total{font-family:var(--font-mono);font-weight:700;font-size:clamp(42px,9.5vw,64px);line-height:1.05;letter-spacing:-.045em;text-align:center;margin:5px 0 3px;font-variant-numeric:tabular-nums}
+  .meter{display:flex;gap:5px;justify-content:center;margin:8px 0 3px}
+  .meter span{font-family:var(--font-mono);font-size:14px;color:var(--rule-2);transition:color .25s ease}
+  .meter span.on{color:var(--stamp)}
+  .tier{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);text-align:center;margin-top:3px}
+
+  .lines{margin-top:16px}
+  .ln{display:flex;align-items:baseline;gap:7px;padding:6px 0;font-size:13.5px}
+  .ln .k{color:var(--ink-2)}
+  .ln .dots{flex:1;align-self:center;border-bottom:1px dotted var(--rule-2);transform:translateY(2px);min-width:16px}
+  .ln .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .ln.learn .k,.ln.learn .v{color:var(--good)}
+  .ln.lost .v{color:var(--stamp)}
+  .ln[hidden]{display:none}
+  .assess{font-size:14.5px;line-height:1.55;margin:14px 0 0}
+  .fact{font-family:var(--font-mono);font-size:12.5px;color:var(--ink-2);background:var(--paper);border:1px solid var(--rule);border-radius:9px;padding:10px 12px;margin-top:14px}
+
+  /* ---------- score ---------- */
+  .score-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+  .score-num{font-family:var(--font-mono);font-size:25px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .score-num small{font-size:12.5px;font-weight:400;color:var(--ink-3);letter-spacing:0}
+  .track{height:5px;border-radius:99px;background:var(--rule-2);margin:9px 0 11px;overflow:hidden}
+  .track i{display:block;height:100%;background:var(--ink);border-radius:99px;transition:width .45s cubic-bezier(.2,.8,.2,1)}
+  .stamp{
+    display:inline-block;border:2px solid var(--stamp);color:var(--stamp);border-radius:6px;
+    padding:6px 12px;font-family:var(--font-mono);font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;
+    transform:rotate(-1.5deg);background:var(--stamp-soft);
+  }
+  .mini{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 9px}
+  ul.drivers{list-style:none;margin:0;padding:0}
+  ul.drivers li{position:relative;padding:4px 0 4px 15px;font-size:13.5px;color:var(--ink-2);line-height:1.45}
+  ul.drivers li::before{content:"";position:absolute;left:0;top:11px;width:5px;height:5px;border-radius:50%;background:var(--rule-2)}
+  ul.drivers li.hot::before{background:var(--stamp)}
+  ul.drivers li.ok::before{background:var(--good)}
+  ul.levers{list-style:none;margin:0;padding:0}
+  ul.levers li{border-top:1px solid var(--rule);padding:9px 0;font-size:13.5px;line-height:1.45}
+  ul.levers li:first-child{border-top:0}
+  .lv-amt{display:block;font-family:var(--font-mono);font-size:13px;color:var(--good);margin-top:3px;font-variant-numeric:tabular-nums}
+  .lv-amt em{font-style:normal;color:var(--ink-3)}
+  .how{font-size:13px;line-height:1.55;color:var(--ink-2)}
+  .how ul{margin:9px 0;padding-left:17px}
+  .how li{margin:4px 0}
+  .how b{color:var(--ink)}
+
+  /* ---------- actions + checklist ---------- */
+  ol.recs{list-style:none;margin:0;padding:0;counter-reset:r}
+  ol.recs li{counter-increment:r;position:relative;padding:10px 0 10px 26px;font-size:14px;line-height:1.5;border-top:1px solid var(--rule)}
+  ol.recs li:first-child{border-top:0;padding-top:0}
+  ol.recs li::before{content:counter(r);position:absolute;left:0;top:11px;font-family:var(--font-mono);font-size:11px;color:var(--stamp)}
+  ol.recs li:first-child::before{top:1px}
+  ul.checks{list-style:none;margin:0;padding:0}
+  ul.checks li{padding:6px 0;font-size:13.5px;line-height:1.45;color:var(--ink-2)}
+  ul.checks label{display:flex;gap:9px;align-items:flex-start;font-weight:400;font-size:13.5px;margin:0;cursor:pointer}
+  ul.checks input{accent-color:var(--stamp);width:15px;height:15px;margin:2px 0 0;flex:none}
+
+  .equiv{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .eq{background:var(--bill);border:1px solid var(--rule);border-radius:9px;padding:10px 11px}
+  .eq b{display:block;font-family:var(--font-mono);font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .eq span{font-size:12.5px;color:var(--ink-2)}
+
+  /* ---------- insight ---------- */
+  .insight{border:1px solid var(--ink);border-radius:var(--r);padding:20px 22px;background:var(--paper)}
+  .insight .mini{margin:0 0 8px;color:var(--ink)}
+  .insight p{margin:0;font-size:15.5px;line-height:1.55;max-width:62ch}
+  .copy-row{display:flex;align-items:center;gap:11px;margin-top:14px;flex-wrap:wrap}
+  @media(min-width:920px){
+    .insight{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:20px 24px}
+    .insight > div:first-child{flex:1;min-width:0}
+    .copy-row{margin-top:0;flex:none}
+  }
+  .copy-btn{
+    font-family:var(--font-mono);font-size:12.5px;letter-spacing:.04em;
+    background:var(--ink);color:#fff;border:0;border-radius:9px;padding:10px 15px;cursor:pointer;
+    transition:opacity .15s ease;
+  }
+  .copy-btn:hover{opacity:.85}
+  .copy-said{font-family:var(--font-mono);font-size:12px;color:var(--good);opacity:0;transition:opacity .2s ease}
+  .copy-said.on{opacity:1}
+
+  /* ---------- mobile dock ---------- */
+  .dock{
+    position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);
+    backdrop-filter:blur(8px);border-top:1px solid var(--rule);
+    padding:9px 18px calc(9px + env(safe-area-inset-bottom));
+    display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:20;
+  }
+  .dock .dk{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+  .dock .dv{font-family:var(--font-mono);font-size:21px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+  .dock .ds{font-family:var(--font-mono);font-size:11px;color:var(--stamp);text-align:right;line-height:1.3}
+  @media(min-width:920px){.dock{display:none}}
+
+  footer{margin-top:34px;padding-top:20px;border-top:1px solid var(--rule);text-align:center}
+  footer b{display:block;font-size:14px;margin-bottom:4px}
+  footer .fl{color:var(--ink-2);font-size:13.5px;margin:0 0 4px}
+  footer a{color:var(--stamp);font-size:13.5px;text-decoration:none}
+  footer a:hover{text-decoration:underline}
+  footer .disc{color:var(--ink-3);font-size:12.5px;line-height:1.55;max-width:70ch;margin:12px auto 0}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;animation:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow" data-i="eyebrow"></div>
+    <h1>Meeting Reality Check</h1>
+    <p class="sub" data-i="sub"></p>
+    <p class="intro" data-i="intro"></p>
+  </header>
+
+  <div class="cols">
+
+    <!-- ---------- row 1, left: what you tell the tool ---------- -->
+    <section class="col-a">
+
+      <div class="card o1">
+        <h2 class="card-title" data-i="secMeeting"></h2>
+
+        <div class="field">
+          <label for="people" data-i="people"></label>
+          <div class="stepper">
+            <button type="button" id="minus" aria-label="&minus;">&minus;</button>
+            <input type="number" id="people" min="1" max="500" step="1" value="6">
+            <button type="button" id="plus" aria-label="+">+</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="length" data-i="length"></label>
+          <div class="row">
+            <input type="number" id="length" min="1" max="1440" step="5" value="60">
+            <div class="seg" role="group">
+              <button type="button" id="unitMin" aria-pressed="true" data-i="unitMin"></button>
+              <button type="button" id="unitHr" aria-pressed="false" data-i="unitHr"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="salary" data-i="salary"></label>
+          <div class="row">
+            <input type="number" id="salary" min="0" step="1000" value="95000">
+            <select id="currency" style="width:106px;flex:none">
+              <option value="CAD">CAD $</option>
+              <option value="USD">USD $</option>
+              <option value="GBP">GBP &pound;</option>
+              <option value="EUR">EUR &euro;</option>
+              <option value="CNY">CNY &yen;</option>
+            </select>
+          </div>
+          <p class="help" data-i="salaryHelp"></p>
+        </div>
+
+        <div class="field">
+          <div class="slider-head">
+            <span class="lbl" style="margin:0" id="prodLbl" data-i="prod"></span>
+            <span class="slider-val" id="prodVal"></span>
+          </div>
+          <input type="range" id="prod" min="0" max="100" step="5" value="50" aria-labelledby="prodLbl">
+          <div class="scale">
+            <span data-i="scaleLo"></span>
+            <span data-i="scaleHi"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="lbl" data-i="repeat"></span>
+          <div class="chips" id="freq" role="group">
+            <button type="button" class="chip" data-f="once" aria-pressed="true" data-i="fOnce"></button>
+            <button type="button" class="chip" data-f="weekly" aria-pressed="false" data-i="fWeekly"></button>
+            <button type="button" class="chip" data-f="biweekly" aria-pressed="false" data-i="fBiweekly"></button>
+            <button type="button" class="chip" data-f="monthly" aria-pressed="false" data-i="fMonthly"></button>
+            <button type="button" class="chip" data-f="quarterly" aria-pressed="false" data-i="fQuarterly"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card o3">
+        <h2 class="card-title"><span data-i="secContext"></span></h2>
+        <p class="help" style="margin:-8px 0 13px" data-i="contextHelp"></p>
+
+        <div class="field">
+          <label for="purpose" data-i="purpose"></label>
+          <select id="purpose"></select>
+          <p class="help" data-i="purposeHelp"></p>
+        </div>
+
+        <div class="field">
+          <label for="learners" data-i="learners"></label>
+          <div class="stepper">
+            <button type="button" id="lminus" aria-label="&minus;">&minus;</button>
+            <input type="number" id="learners" min="0" max="500" step="1" value="0">
+            <button type="button" id="lplus" aria-label="+">+</button>
+          </div>
+          <p class="help" data-i="learnersHelp"></p>
+          <p class="note" id="learnNote" hidden></p>
+        </div>
+      </div>
+
+      <details class="o5" open>
+        <summary data-i="assumptions"></summary>
+        <div class="det-body">
+          <div class="field">
+            <label for="overhead" data-i="overhead"></label>
+            <input type="number" id="overhead" min="1" max="3" step="0.05" value="1.30">
+            <p class="help" data-i="overheadHelp"></p>
+          </div>
+          <div class="field">
+            <label for="hoursYear" data-i="hoursYear"></label>
+            <input type="number" id="hoursYear" min="500" max="4000" step="10" value="2080">
+            <p class="help" data-i="hoursYearHelp"></p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ---------- row 1, right: what the tool tells you ---------- -->
+    <section class="col-b">
+
+      <div class="bill o2">
+        <div class="bill-head" data-i="billHead"></div>
+        <div class="perf"></div>
+        <div class="line-desc" id="lineDesc"></div>
+        <div class="total-label" data-i="totalLabel"></div>
+        <div class="total" id="total">&mdash;</div>
+        <div class="meter" id="meter" aria-hidden="true"><span>$</span><span>$</span><span>$</span><span>$</span><span>$</span></div>
+        <div class="tier" id="tier"></div>
+
+        <div class="lines">
+          <div class="ln"><span class="k" data-i="perMin"></span><span class="dots"></span><span class="v" id="perMin">&mdash;</span></div>
+          <div class="ln"><span class="k" data-i="perPerson"></span><span class="dots"></span><span class="v" id="perPerson">&mdash;</span></div>
+          <div class="ln learn" id="learnRow" hidden><span class="k" id="learnK"></span><span class="dots"></span><span class="v" id="learnV">&mdash;</span></div>
+          <div class="ln" id="annualRow" hidden><span class="k" id="annualK"></span><span class="dots"></span><span class="v" id="annual">&mdash;</span></div>
+          <div class="ln lost"><span class="k" id="lostK"></span><span class="dots"></span><span class="v" id="lost">&mdash;</span></div>
+        </div>
+
+        <p class="assess" id="assess"></p>
+        <div class="fact" id="fact"></div>
+      </div>
+
+      <div class="card o4">
+        <div class="score-top">
+          <span class="card-title" style="margin:0" data-i="scoreLabel"></span>
+          <span class="score-num"><span id="scoreNum">0</span><small> / 100</small></span>
+        </div>
+        <div class="track"><i id="scoreBar" style="width:0%"></i></div>
+        <div class="stamp" id="stamp">&mdash;</div>
+
+        <div class="mini" data-i="driversLabel"></div>
+        <ul class="drivers" id="drivers"></ul>
+
+        <div class="mini" id="leversLabel"></div>
+        <ul class="levers" id="levers"></ul>
+
+        <details style="margin-top:16px">
+          <summary data-i="howLabel"></summary>
+          <div class="det-body how" id="how"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ---------- row 2: what to do with it ---------- -->
+    <section class="col-c">
+      <div class="card o6">
+        <h2 class="card-title" data-i="actTitle"></h2>
+        <ol class="recs" id="recs"></ol>
+      </div>
+
+      <div class="card o7">
+        <h2 class="card-title" data-i="checkTitle"></h2>
+        <ul class="checks" id="checks"></ul>
+      </div>
+
+      <div class="card o8">
+        <h2 class="card-title" data-i="equivTitle"></h2>
+        <div class="equiv" id="equiv"></div>
+      </div>
+    </section>
+
+    <!-- ---------- closing band ---------- -->
+    <div class="insight o9">
+      <div>
+        <div class="mini" data-i="insightLabel"></div>
+        <p data-i="insightBody"></p>
+      </div>
+      <div class="copy-row">
+        <button type="button" class="copy-btn" id="copyBtn" data-i="copyBtn"></button>
+        <span class="copy-said" id="copySaid"></span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Built by Grace Ge</b>
+    <p class="fl">Building systems for better decisions.</p>
+    <a href="https://gracege.com" id="siteLink">https://gracege.com</a>
+    <p class="disc" data-i="disclaimer"></p>
+  </footer>
+</div>
+
+<div class="dock" aria-hidden="true">
+  <div>
+    <div class="dk" data-i="totalLabel"></div>
+    <div class="dv" id="dockTotal">—</div>
+  </div>
+  <div class="ds" id="dockScore">—</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* Change this one line if the tool moves. Used in the footer and the copied summary. */
+  var TOOL_URL = "https://gracege.com/tools/meeting-reality-check/toolkit";
+
+  var T = {
+    eyebrow:"Decision Systems Toolkit",
+    sub:"Because every meeting has a price tag.",
+    intro:"Every meeting spends two things: time and money. This tool shows you how much — not to talk you out of meetings, but to make the ones you keep more deliberate.",
+
+    secMeeting:"The meeting",
+    people:"People in the room",
+    length:"Length", unitMin:"min", unitHr:"hours",
+    salary:"Average annual salary",
+    salaryHelp:"A rough average across everyone attending is fine.",
+    prod:"How productive was it?",
+    scaleLo:"Should have been an email", scaleHi:"Every minute earned it",
+    repeat:"Does it repeat?",
+    fOnce:"One-off", fWeekly:"Weekly", fBiweekly:"Biweekly", fMonthly:"Monthly", fQuarterly:"Quarterly",
+
+    secContext:"Context",
+    contextHelp:"Optional. Skip it and you still get a cost. Fill it in and the score knows what kind of meeting it is judging.",
+    purpose:"What is this meeting for?",
+    purposeHelp:"A training session and a status update shouldn't be held to the same standard.",
+    learners:"How many are here mainly to learn?",
+    learnersHelp:"New joiners, people being brought up to speed, anyone getting exposure to work they don't own yet.",
+    learnNote:"Counted as investment, not overhead. These attendees are excluded from the attendance deduction, and no saving is ever calculated from them not being in the room.",
+
+    assumptions:"Assumptions",
+    overhead:"Benefits & overhead multiplier",
+    overheadHelp:"Salary alone understates the cost. 1.30 adds 30% for benefits, payroll tax and overhead.",
+    hoursYear:"Working hours per year",
+    hoursYearHelp:"2080 = 40 hours a week, 52 weeks.",
+
+    billHead:"The bill",
+    totalLabel:"This meeting costs",
+    perMin:"Per minute", perPerson:"Per person",
+    annualK:"Per year, at this frequency",
+    learnK:function(n){ return "Of which learning investment (" + n + (n===1?" person)":" people)"); },
+    lostK:function(p, hasLearners){
+      return "Value lost at " + p + "% productive" + (hasLearners ? ", learning excluded" : "");
+    },
+
+    scoreLabel:"Meeting design score",
+    driversLabel:"Where the score comes from",
+    leversLabel:"What would change it",
+    howLabel:"How this score works",
+    leverSave:"saves", leverRecover:"recovers about", leverYear:"a year",
+
+    actTitle:"What to do about it",
+    checkTitle:"Before you change anything, ask",
+    equivTitle:"That's about",
+    insightLabel:"Decision Insight",
+    insightBody:"The goal isn't fewer meetings. It's meetings where everyone in the room knows why they're there.",
+    copyBtn:"Copy summary",
+    copied:"Copied — paste it anywhere.",
+
+    disclaimer:"This tool is provided for reference only. Estimates are based on the assumptions you enter and do not reflect the full value of a meeting. Who should be in the room is a judgment about learning, mentoring and collaboration — not cost alone.",
+
+    prodScale:{0:"Should have been an email",25:"Barely moved",50:"Half of it mattered",75:"Mostly useful",100:"Every minute earned it"},
+
+    desc:function(n,h,m){
+      var d = h && m ? h+"h "+m+"m" : (h ? h+"h" : m+"m");
+      return n + (n===1?" person × ":" people × ") + d;
+    },
+
+    purposes:{
+      none:"Not specified",
+      decision:"Making a decision",
+      planning:"Planning & alignment",
+      explore:"Exploring options",
+      status:"Sharing status",
+      learning:"Training & mentoring"
+    },
+
+    tiers:["Tiny meeting","Small meeting","Medium meeting","Large meeting","Executive meeting","Boardroom level"],
+
+    assess:[
+      "Nothing to worry about. Carry on.",
+      "Still reasonable. Just make sure someone leaves with an action item.",
+      "This meeting is now expensive enough to deserve a written agenda.",
+      "You just spent enough to buy a new laptop. Worth asking what it produced.",
+      "This meeting costs more than many people pay in monthly rent. It should return something in proportion.",
+      "This could fund an intern for weeks. Please don't spend half of it deciding where to have lunch."
+    ],
+
+    verdicts:[
+      {min:85,txt:"Well designed"},
+      {min:70,txt:"Solid, could be tighter"},
+      {min:50,txt:"Room to improve"},
+      {min:30,txt:"Needs a rethink"},
+      {min:0, txt:"This could have been an email"}
+    ],
+
+    states:{
+      people:["Attendance is proportionate to the purpose",
+              "Slightly larger than the purpose needs",
+              "Larger than the purpose needs",
+              "Much larger than the purpose needs"],
+      time:["Duration fits the purpose",
+            "Slightly long for the purpose",
+            "Long for the purpose",
+            "Much longer than the purpose needs"],
+      prod:["Time is being used well",
+            "Moderately productive",
+            "Half the time isn't landing",
+            "Most of the time isn't landing"],
+      freq:["One-off — no recurring load",
+            "Repeats every quarter",
+            "Repeats every month",
+            "Repeats every two weeks",
+            "Repeats every week"]
+    },
+
+    levers:{
+      end15:"End 15 minutes early",
+      partial:"Have half the room join only for the part that involves them",
+      prep:"Send pre-reading so discussion starts at the decision",
+      biweekly:"Move it to every other week"
+    },
+
+    recs:{
+      prereading:"Send pre-reading so discussion time goes to decisions instead of updates.",
+      async:"Move the status portion to a written update and keep the meeting for what actually needs discussion.",
+      partial:"Invite some people for only the portion that involves them, rather than dropping them from the meeting.",
+      draft:"Let AI prepare the first draft beforehand. It's easier to argue with a draft than a blank page.",
+      biweekly:"Try every other week for a month and watch what actually breaks.",
+      objective:"Write the objective in the invite. If you can't write it, the meeting isn't ready.",
+      owner:"End with one owner and one decision written down.",
+      keep:"Nothing to fix here. Keep it short, and keep it."
+    },
+
+    checks:[
+      "Does everyone in the room know why they're there?",
+      "Is anyone attending mainly to learn? That's an investment, not overhead.",
+      "Could part of this be handled in writing instead?",
+      "If you're the one invited: can you name your role here? If not, ask the organizer."
+    ],
+
+    how:function(prof, idealMin, purposeName){
+      return "Every meeting starts at 100. Four things subtract from it, and nothing else does."
+        + "<ul>"
+        + "<li><b>Attendance</b> — 3.5 points for each person beyond " + prof.free + ", capped at 28. People attending to learn are not counted.</li>"
+        + "<li><b>Length</b> — " + Math.round(22*prof.durMult) + " points per hour beyond " + idealMin + " min, capped at 26.</li>"
+        + "<li><b>Productivity</b> — up to 34 points, taken straight from the slider.</li>"
+        + "<li><b>Recurrence</b> — weekly 12, biweekly 8, monthly 5, quarterly 2.</li>"
+        + "</ul>"
+        + "The two baselines above come from the purpose you picked (<b>" + purposeName + "</b>). A training session is expected to run longer and larger than a status update, and is scored that way. "
+        + "Cost is not part of the score — an expensive meeting can be well designed, and a cheap one can be a waste.";
+    },
+
+    units:{coffee:"coffees",lunch:"working lunches",gpt:"months of ChatGPT Plus",book:"business books",netflix:"months of Netflix",gym:"months of a gym membership",desk:"standing desks",chair:"ergonomic chairs",conf:"conference tickets",flight:"domestic round-trip flights"},
+    unitsOne:{coffee:"coffee",lunch:"working lunch",gpt:"month of ChatGPT Plus",book:"business book",netflix:"month of Netflix",gym:"month of a gym membership",desk:"standing desk",chair:"ergonomic chair",conf:"conference ticket",flight:"domestic round-trip flight"},
+    factLead:"For scale: ", factEnd:".",
+
+    copy:{cost:"Cost", perMin:"/min", annual:"Per year", score:"Meeting design score", driver:"Main driver", lever:"Try", learners:"Attending to learn"}
+  };
+
+  /* ---- currencies: default salary, tier scale, reference prices ---- */
+  var CUR = {
+    USD:{sym:"$", loc:"en-US", salary:95000,  scale:1,    p:{coffee:5.5, lunch:18, gpt:20,  book:22, netflix:15.5, gym:45, desk:400,  chair:500,  conf:800,  flight:320}},
+    CAD:{sym:"$", loc:"en-CA", salary:95000,  scale:1.35, p:{coffee:6.5, lunch:24, gpt:28,  book:30, netflix:19,   gym:55, desk:550,  chair:680,  conf:1100, flight:450}},
+    GBP:{sym:"£", loc:"en-GB", salary:55000,  scale:0.79, p:{coffee:3.6, lunch:12, gpt:16,  book:18, netflix:13,   gym:40, desk:320,  chair:400,  conf:650,  flight:180}},
+    EUR:{sym:"€", loc:"de-DE", salary:65000,  scale:0.92, p:{coffee:3.8, lunch:15, gpt:23,  book:20, netflix:13.5, gym:40, desk:380,  chair:470,  conf:750,  flight:220}},
+    CNY:{sym:"¥", loc:"zh-CN", salary:180000, scale:7.2,  p:{coffee:22,  lunch:40, gpt:160, book:60, netflix:30,   gym:250,desk:1500, chair:1800, conf:3000, flight:1200}}
+  };
+  var BASE_TIERS = [50, 200, 800, 2500, 10000];
+  var FREQ = {once:0, weekly:48, biweekly:24, monthly:12, quarterly:4};
+  var FREQ_PEN = {once:0, weekly:12, biweekly:8, monthly:5, quarterly:2};
+  var FREQ_IDX = {once:0, quarterly:1, monthly:2, biweekly:3, weekly:4};
+
+  /* ---- purpose profiles: what this kind of meeting is expected to need ---- */
+  var PURPOSE = {
+    none:     {free:5,  ideal:0.75, durMult:1},
+    decision: {free:6,  ideal:0.75, durMult:1},
+    planning: {free:8,  ideal:1.0,  durMult:1},
+    explore:  {free:8,  ideal:1.0,  durMult:0.9},
+    status:   {free:5,  ideal:0.5,  durMult:1.3},
+    learning: {free:25, ideal:1.5,  durMult:0.7}
+  };
+  var PURPOSE_ORDER = ["none","decision","planning","explore","status","learning"];
+
+  var S = {unit:"min", freq:"once", lastTotal:null, salaryTouched:false};
+  var $ = function(id){ return document.getElementById(id); };
+
+  function money(v, code){
+    var digits = Math.abs(v) < 100 ? 2 : 0;
+    try{
+      return new Intl.NumberFormat(CUR[code].loc,{style:"currency",currency:code,minimumFractionDigits:digits,maximumFractionDigits:digits}).format(v);
+    }catch(e){ return CUR[code].sym + v.toFixed(digits); }
+  }
+  function num(v){ try{ return new Intl.NumberFormat("en-US").format(v); }catch(e){ return String(v); } }
+  function clamp(v,a,b){ return Math.min(b,Math.max(a,v)); }
+  function val(id, fb){ var v = parseFloat($(id).value); return (isNaN(v) || v < 0) ? fb : v; }
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function mins(h){ return Math.round(h*60); }
+
+  /* ================= the maths ================= */
+  function compute(){
+    var code = $("currency").value;
+    var people = clamp(Math.round(val("people",1) || 1), 1, 500);
+    var raw = val("length", 30) || 30;
+    var hours = clamp(S.unit === "min" ? raw/60 : raw, 1/60, 24);
+    var salary = val("salary", CUR[code].salary) || CUR[code].salary;
+    var overhead = clamp(val("overhead",1.3) || 1.3, 1, 3);
+    var hoursYear = clamp(val("hoursYear",2080) || 2080, 500, 4000);
+    var prod = parseInt($("prod").value,10)/100;
+    var pKey = $("purpose").value || "none";
+    var prof = PURPOSE[pKey] || PURPOSE.none;
+
+    var learners = clamp(Math.round(val("learners",0)), 0, people);
+    var discussing = Math.max(0, people - learners);
+
+    var hourly = salary * overhead / hoursYear;
+    var cost = hourly * people * hours;
+    var learnCost = hourly * learners * hours;
+    var discussCost = hourly * discussing * hours;
+    var lost = discussCost * (1 - prod);
+    var annual = FREQ[S.freq] ? cost * FREQ[S.freq] : 0;
+
+    /* ---- score: starts at 100, four deductions. Kept simple on purpose so it can be explained. ---- */
+    var pen = {
+      people: Math.min(28, Math.max(0, discussing - prof.free) * 3.5),
+      time:   Math.min(26, Math.max(0, hours - prof.ideal) * 22 * prof.durMult),
+      prod:   (1 - prod) * 34,
+      freq:   FREQ_PEN[S.freq]
+    };
+    var score = Math.round(clamp(100 - (pen.people + pen.time + pen.prod + pen.freq), 0, 100));
+
+    var scale = CUR[code].scale, tier = 0;
+    for (var i=0;i<BASE_TIERS.length;i++){ if (cost >= BASE_TIERS[i]*scale) tier = i+1; }
+
+    return {code:code, people:people, learners:learners, discussing:discussing, hours:hours,
+            hourly:hourly, cost:cost, learnCost:learnCost, lost:lost, perMin:cost/(hours*60),
+            perPerson:cost/people, annual:annual, prod:prod, pen:pen, score:score, tier:tier,
+            pKey:pKey, prof:prof};
+  }
+
+  /* ================= pieces ================= */
+  function driverList(r){
+    var out = [];
+    out.push({k:"people", pen:r.pen.people, txt:T.states.people[r.pen.people===0?0:(r.pen.people<10?1:(r.pen.people<20?2:3))]});
+    out.push({k:"time",   pen:r.pen.time,   txt:T.states.time[r.pen.time===0?0:(r.pen.time<9?1:(r.pen.time<18?2:3))]});
+    out.push({k:"prod",   pen:r.pen.prod,   txt:T.states.prod[r.prod>=0.85?0:(r.prod>=0.6?1:(r.prod>=0.35?2:3))]});
+    out.push({k:"freq",   pen:r.pen.freq,   txt:T.states.freq[FREQ_IDX[S.freq]]});
+    out.sort(function(a,b){ return b.pen - a.pen; });
+    return out;
+  }
+
+  /* Levers only ever change the SHAPE of the meeting: how long it runs, who needs to be
+     there for which part, how often it repeats. Removing people to save money is never
+     offered here, and any lever touching attendance is suppressed when someone is
+     attending to learn. */
+  function leverList(r){
+    var out = [];
+    if (r.hours > 0.5){
+      out.push({txt:T.levers.end15, save:r.hourly * r.people * 0.25});
+    }
+    if (r.discussing >= 6 && r.hours >= 0.75 && r.learners === 0){
+      out.push({txt:T.levers.partial, save:r.hourly * Math.floor(r.discussing/2) * (r.hours/2)});
+    }
+    if (r.prod <= 0.6){
+      out.push({txt:T.levers.prep, save:r.lost * 0.3, recover:true});
+    }
+    if (S.freq === "weekly"){
+      out.push({txt:T.levers.biweekly, save:r.cost * 24, annualOnly:true});
+    }
+    return out.slice(0,3);
+  }
+
+  function recList(r){
+    var L = T.recs, list = [];
+    if (r.score >= 85) list.push(L.keep);
+    if (r.prod <= 0.6) list.push(L.prereading);
+    if (r.pKey === "status" && r.hours >= 0.5) list.push(L.async);
+    if (r.discussing >= 8 && r.hours >= 0.75) list.push(L.partial);
+    if (r.prod <= 0.75) list.push(L.draft);
+    if (S.freq === "weekly") list.push(L.biweekly);
+    if (r.pKey === "none") list.push(L.objective);
+    list.push(L.owner, L.objective, L.draft);
+    /* Deliberately absent: any recommendation to remove people. The score still
+       reports plainly when attendance is larger than the purpose needs, so the
+       diagnosis is honest — but the tool never hands anyone the action. */
+    var seen = {}, out = [];
+    for (var i=0;i<list.length && out.length<3;i++){ if(!seen[list[i]]){ seen[list[i]]=1; out.push(list[i]); } }
+    return out;
+  }
+
+  function equivList(r){
+    var p = CUR[r.code].p, out = [];
+    var order = ["coffee","lunch","gpt","book","netflix","gym","desk","chair","conf","flight"];
+    for (var i=0;i<order.length;i++){
+      var k = order[i], n = Math.round(r.cost / p[k]);
+      if (n >= 1) out.push({n:n, key:k});
+    }
+    /* Deterministic: same inputs always give the same comparisons, so a screenshot
+       can be trusted. Variety comes from the cost changing, not from a random seed. */
+    out.sort(function(a,b){
+      var sa = (a.n>=2 && a.n<=999) ? 0 : 1, sb = (b.n>=2 && b.n<=999) ? 0 : 1;
+      return sa - sb;
+    });
+    return out.slice(0,4);
+  }
+
+  function label(key, n){ return (n === 1 && T.unitsOne[key]) ? T.unitsOne[key] : T.units[key]; }
+
+  function funFact(r){
+    var p = CUR[r.code].p, keys = ["coffee","gpt","book","flight","lunch","conf"];
+    var pick = keys[Math.abs(Math.round(r.cost)) % keys.length];
+    var n = r.cost / p[pick];
+    if (n < 1){ pick = "coffee"; n = r.cost / p.coffee; }
+    var v = n >= 10 ? Math.round(n) : Math.round(n*10)/10;
+    return T.factLead + num(v) + " " + label(pick, v) + T.factEnd;
+  }
+
+  function verdictOf(score){
+    for (var i=0;i<T.verdicts.length;i++){ if (score >= T.verdicts[i].min) return T.verdicts[i].txt; }
+    return T.verdicts[T.verdicts.length-1].txt;
+  }
+
+  /* ================= render ================= */
+  var raf = null;
+  function animateTotal(el, from, to, code){
+    var reduce = (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) || document.hidden || from === null;
+    if (reduce || Math.abs(to-from) < 1){ el.textContent = money(to, code); return; }
+    var t0 = performance.now();
+    if (raf) cancelAnimationFrame(raf);
+    (function step(now){
+      var p = Math.min(1,(now-t0)/380), e = 1 - Math.pow(1-p,3);
+      el.textContent = money(from + (to-from)*e, code);
+      if (p < 1) raf = requestAnimationFrame(step);
+    })(t0);
+  }
+
+  var LAST = null;
+
+  function render(){
+    var r = compute();
+    LAST = r;
+    var h = Math.floor(r.hours), m = Math.round((r.hours-h)*60);
+
+    $("lineDesc").textContent = T.desc(r.people, h, m);
+    animateTotal($("total"), S.lastTotal, r.cost, r.code);
+    $("dockTotal").textContent = money(r.cost, r.code);
+    S.lastTotal = r.cost;
+
+    var mk = $("meter").children;
+    for (var i=0;i<mk.length;i++){
+      mk[i].textContent = CUR[r.code].sym;
+      mk[i].className = i < Math.max(1, Math.min(5, r.tier+1)) ? "on" : "";
+    }
+    $("tier").textContent = T.tiers[r.tier];
+    $("perMin").textContent = money(r.perMin, r.code);
+    $("perPerson").textContent = money(r.perPerson, r.code);
+
+    $("learnRow").hidden = !r.learners;
+    if (r.learners){ $("learnK").textContent = T.learnK(r.learners); $("learnV").textContent = money(r.learnCost, r.code); }
+    $("learnNote").hidden = !r.learners;
+    if (r.learners) $("learnNote").textContent = T.learnNote;
+
+    $("annualRow").hidden = !r.annual;
+    $("annualK").textContent = T.annualK;
+    $("annual").textContent = r.annual ? money(r.annual, r.code) : "—";
+    $("lostK").textContent = T.lostK(Math.round(r.prod*100), r.learners > 0);
+    $("lost").textContent = money(r.lost, r.code);
+    $("assess").textContent = T.assess[r.tier];
+    $("fact").textContent = funFact(r);
+
+    $("scoreNum").textContent = r.score;
+    $("scoreBar").style.width = r.score + "%";
+    $("stamp").textContent = verdictOf(r.score);
+    $("dockScore").textContent = r.score + " · " + verdictOf(r.score);
+
+    var dv = driverList(r), dh = "";
+    for (var a=0;a<dv.length;a++){
+      var cls = dv[a].pen >= 10 ? "hot" : (dv[a].pen === 0 ? "ok" : "");
+      dh += '<li class="'+cls+'">'+esc(dv[a].txt)+'</li>';
+    }
+    $("drivers").innerHTML = dh;
+
+    var lv = leverList(r), lh = "";
+    for (var b=0;b<lv.length;b++){
+      var amt;
+      if (lv[b].annualOnly) amt = money(lv[b].save, r.code) + " " + T.leverYear;
+      else {
+        amt = (lv[b].recover ? T.leverRecover : T.leverSave) + " " + money(lv[b].save, r.code);
+        if (r.annual) amt += ' <em>· ' + money(lv[b].save * FREQ[S.freq], r.code) + " " + T.leverYear + '</em>';
+      }
+      lh += '<li>'+esc(lv[b].txt)+'<span class="lv-amt">'+amt+'</span></li>';
+    }
+    $("levers").innerHTML = lh;
+    $("leversLabel").textContent = lv.length ? T.leversLabel : "";
+
+    $("how").innerHTML = T.how(r.prof, mins(r.prof.ideal), T.purposes[r.pKey]);
+
+    var rc = recList(r), rh = "";
+    for (var c=0;c<rc.length;c++) rh += "<li>"+esc(rc[c])+"</li>";
+    $("recs").innerHTML = rh;
+
+    var eq = equivList(r), eh = "";
+    for (var e=0;e<eq.length;e++) eh += '<div class="eq"><b>'+num(eq[e].n)+'</b><span>'+esc(label(eq[e].key, eq[e].n))+'</span></div>';
+    $("equiv").innerHTML = eh;
+
+    var pv = parseInt($("prod").value,10);
+    $("prod").style.setProperty("--fill", pv+"%");
+    var near = [0,25,50,75,100].reduce(function(x,y){ return Math.abs(y-pv) < Math.abs(x-pv) ? y : x; });
+    $("prodVal").textContent = pv + "% · " + T.prodScale[near];
+  }
+
+  /* ================= copy summary ================= */
+  function summaryText(){
+    var r = LAST || compute();
+    var h = Math.floor(r.hours), m = Math.round((r.hours-h)*60);
+    var dv = driverList(r), lv = leverList(r);
+    var lines = [];
+    lines.push("Meeting Reality Check — " + T.desc(r.people, h, m));
+    lines.push(T.copy.cost + ": " + money(r.cost, r.code) + " (" + r.code + ") · " + money(r.perMin, r.code) + T.copy.perMin);
+    if (r.annual) lines.push(T.copy.annual + ": " + money(r.annual, r.code));
+    lines.push(T.copy.score + ": " + r.score + "/100 — " + verdictOf(r.score));
+    lines.push(T.copy.driver + ": " + dv[0].txt);
+    for (var i=0;i<lv.length && i<2;i++){
+      lines.push(T.copy.lever + ": " + lv[i].txt + " (" +
+        (lv[i].annualOnly ? money(lv[i].save, r.code) + " " + T.leverYear
+                          : (lv[i].recover ? T.leverRecover : T.leverSave) + " " + money(lv[i].save, r.code)) + ")");
+    }
+    if (r.learners) lines.push(T.copy.learners + ": " + r.learners);
+    lines.push(TOOL_URL);
+    return lines.join("\n");
+  }
+
+  function flash(){
+    var s = $("copySaid");
+    s.textContent = T.copied; s.className = "copy-said on";
+    setTimeout(function(){ s.className = "copy-said"; }, 2200);
+  }
+  $("copyBtn").addEventListener("click", function(){
+    var txt = summaryText();
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(flash, function(){ fallbackCopy(txt); });
+    } else fallbackCopy(txt);
+  });
+  function fallbackCopy(txt){
+    var ta = document.createElement("textarea");
+    ta.value = txt; ta.setAttribute("readonly","");
+    ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); flash(); }catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  /* ================= wiring ================= */
+  ["people","length","salary","overhead","hoursYear","prod","learners","purpose"].forEach(function(id){
+    $(id).addEventListener("input", function(){ if (id === "salary") S.salaryTouched = true; render(); });
+    $(id).addEventListener("change", render);
+  });
+  $("currency").addEventListener("change", function(){
+    if (!S.salaryTouched) $("salary").value = CUR[this.value].salary;
+    S.lastTotal = null; render();
+  });
+
+  function bump(id, d, lo){
+    var v = (parseInt($(id).value,10) || 0) + d;
+    $(id).value = Math.max(lo, Math.min(500, v)); render();
+  }
+  $("minus").addEventListener("click", function(){ bump("people",-1,1); });
+  $("plus").addEventListener("click",  function(){ bump("people", 1,1); });
+  $("lminus").addEventListener("click",function(){ bump("learners",-1,0); });
+  $("lplus").addEventListener("click", function(){ bump("learners", 1,0); });
+
+  function setUnit(u){
+    if (S.unit === u) return;
+    var cur = parseFloat($("length").value) || 0;
+    if (u === "hr"){ $("length").value = Math.round((cur/60)*100)/100 || 1; $("length").step = 0.25; }
+    else { $("length").value = Math.round(cur*60) || 30; $("length").step = 5; }
+    S.unit = u;
+    $("unitMin").setAttribute("aria-pressed", u === "min");
+    $("unitHr").setAttribute("aria-pressed", u === "hr");
+    render();
+  }
+  $("unitMin").addEventListener("click", function(){ setUnit("min"); });
+  $("unitHr").addEventListener("click",  function(){ setUnit("hr"); });
+
+  var chips = document.querySelectorAll("#freq .chip");
+  Array.prototype.forEach.call(chips, function(ch){
+    ch.addEventListener("click", function(){
+      S.freq = ch.getAttribute("data-f");
+      Array.prototype.forEach.call(chips, function(o){ o.setAttribute("aria-pressed", o === ch); });
+      render();
+    });
+  });
+
+  /* ================= init ================= */
+  var nodes = document.querySelectorAll("[data-i]");
+  Array.prototype.forEach.call(nodes, function(n){
+    var k = n.getAttribute("data-i");
+    if (T[k] != null) n.textContent = T[k];
+  });
+
+  var po = "";
+  for (var q=0;q<PURPOSE_ORDER.length;q++){
+    var k = PURPOSE_ORDER[q];
+    po += '<option value="'+k+'">'+esc(T.purposes[k])+'</option>';
+  }
+  $("purpose").innerHTML = po;
+
+  var ch = "";
+  for (var w=0;w<T.checks.length;w++){
+    ch += '<li><label><input type="checkbox"><span>'+esc(T.checks[w])+'</span></label></li>';
+  }
+  $("checks").innerHTML = ch;
+
+  $("siteLink").textContent = "https://gracege.com";
+  $("salary").value = CUR[$("currency").value].salary;
+  render();
+})();
+</script>
+</body>
+</html>
