@@ -1,0 +1,24 @@
+name: Decision Systems Toolkit CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate HTML structure
+        run: |
+          for file in index.html ab-test-calculator/index-en.html ab-test-calculator/index-cn.html; do
+            if [ -f "$file" ]; then
+              echo "Validating $file..."
+              grep -q "<!DOCTYPE html>" "$file" || exit 1
+              grep -q "</html>" "$file" || exit 1
+            fi
+          done
+          echo "All HTML files valid!"
