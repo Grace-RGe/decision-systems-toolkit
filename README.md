@@ -5,42 +5,41 @@ A growing collection of practical decision tools built with analytics, statistic
 Each tool runs entirely in your browser. No account, no installation, no data leaves your machine.
 
 ## Live Demo
-https://gracege.com/tools/ab-test-calculator
+- [English Version](ab-test-calculator/index-en.html)
+- [中文版](ab-test-calculator/index-cn.html)
 
-## Tools
+## Tools & Calculators
 
-### A/B Test Calculator
+### 1. Mean Comparison (Welch's T-Test)
+- Compares continuous numeric metrics (order value, spend, time on page).
+- Uses **Welch's t-test** to correct for unequal group variances.
 
-Four calculators for common experimentation decisions:
+### 2. Proportion Comparison (Z-Test)
+- Compares conversion rates, click-through rates, and opt-in rates.
+- Uses **Newcombe (Wilson score) hybrid confidence intervals** to prevent negative bounds on small samples or extreme rates.
 
-- **Mean Comparison** — Welch's t-test for continuous metrics (revenue, order value, time on page)
-- **Proportion Comparison** — z-test for conversion rates, with Newcombe (Wilson score) confidence intervals
-- **Sample Size** — separate modes for A/B tests (baseline + MDE + power) and finite-population surveys
-- **Statistical Power** — work out whether your test can actually detect the effect you care about
+### 3. Bayesian A/B Test & Multi-Armed Bandit
+- Evaluates $P(B > A)$ (Probability Test B beats Control A) using **Beta-Binomial Monte Carlo posterior sampling** (20,000 draws in <10ms).
+- Calculates expected decision risk/loss.
+- Computes **Thompson Sampling** multi-armed bandit traffic allocation recommendations.
 
-Each tab includes a "how to read this & common mistakes" section covering the failure modes that matter: peeking mid-test, confusing statistical significance with practical importance, post-hoc power, multiple comparisons.
+### 4. Sample Size Calculator
+- **A/B Test Mode:** Estimates sample size per group based on baseline conversion rate and Minimum Detectable Effect (MDE).
+- **Population Survey Mode:** Calculates finite population sample sizes for surveys.
 
-**[English version](ab-test-calculator/index-en.html)**
-![English version screenshot](ab-test-calculator-demo-en.jpg)
+### 5. Statistical Power Calculator
+- Determines post-hoc / pre-hoc power for a given sample size and expected conversion rates.
 
-**[中文版](ab-test-calculator/index-cn.html)**
-![Chinese version screenshot](ab-test-calculator-demo-cn.jpg)
+### 6. Cohort Retention Decay & LTV Estimator
+- Fits a Power-Law retention decay curve ($R(t) = a \cdot t^{-b}$) from Day 1, 7, 14, 30 data.
+- Projects long-term retention (Day 60, 90, 180, 365) and active user LTV multipliers.
 
-## Notes on the statistics
+## Key Features
 
-- Confidence intervals for proportions use the **Newcombe method** (Wilson score hybrid) rather than the simple Wald interval. Wald breaks down with small samples or rates near 0%/100% — it can produce impossible negative bounds. Newcombe doesn't.
-- The significance test uses a pooled z-test (assuming equal proportions under the null); the interval uses the unpooled Newcombe approach. These are built on different frameworks, so in extreme small-sample cases they can appear to disagree. That's a known property, not a bug.
-- Welch's correction is applied by default for mean comparison — no assumption of equal variances.
-- All statistical functions (erf, incomplete beta, t-distribution CDF, Wilson score) are implemented directly in plain JavaScript. No external libraries, no CDN dependencies. The files work offline.
-
-## Why I built this
-
-Most A/B test calculators give you a number and stop. The harder part is knowing what the number means and when not to trust it.
-
-Built by [Grace Ge](https://gracege.com).
-Building systems for better decisions.
-
-More tools coming.
+- **Theme Toggle:** Dark mode support (`prefers-color-scheme`) with custom toggle (`☀️ / 🌙`).
+- **URL State Auto-Sync:** Share direct links with team members via URL parameters.
+- **Copy Executive Summary:** One-click button to copy formatted decision summaries to clipboard.
+- **Zero External Dependencies:** Built with pure HTML/CSS/JS. Works offline.
 
 ## License
 

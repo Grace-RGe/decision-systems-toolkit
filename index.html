@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Systems Toolkit | Practical Analytics & AI Decision Tools</title>
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-dark: #4338ca;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --radius: 12px;
+  }
+  [data-theme="dark"] {
+    --primary: #6366f1;
+    --primary-dark: #4f46e5;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --border: #334155;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 40px 16px;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 36px; }
+  header .kicker {
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  header h1 { font-size: 2.2rem; margin: 0 0 10px; }
+  header p { font-size: 1.1rem; color: var(--muted); max-width: 600px; margin: 0 auto; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    text-decoration: none;
+    color: var(--text);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+  }
+  .card h3 { margin: 0 0 8px; font-size: 1.2rem; color: var(--primary); }
+  .card p { margin: 0 0 16px; font-size: 0.92rem; color: var(--muted); flex-grow: 1; }
+  .card .tag {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .banner {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 40px;
+  }
+  .banner h2 { margin-top: 0; font-size: 1.3rem; }
+  .banner ul { margin: 0; padding-left: 20px; color: var(--muted); }
+  .banner li { margin-bottom: 8px; }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+  }
+  footer a { color: var(--primary); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="kicker">Decision Systems Toolkit</div>
+    <h1>Practical Tools for Better Decisions</h1>
+    <p>A growing suite of browser-based analytics, statistical inference, and decision modeling tools.</p>
+  </header>
+
+  <div class="grid">
+    <a href="ab-test-calculator/index-en.html" class="card">
+      <h3>🌐 A/B Testing & Decision Toolkit (English)</h3>
+      <p>Mean Comparison, Proportion Z-Test, Bayesian A/B & Bandits, Sample Size, Power, and Cohort LTV Retention Estimator.</p>
+      <div class="tag">Launch Toolkit →</div>
+    </a>
+
+    <a href="ab-test-calculator/index-cn.html" class="card">
+      <h3>🇨🇳 A/B 测试与决策工具包 (中文版)</h3>
+      <p>均值 T 检验、比例 Z 检验、贝叶斯 A/B 测试与多臂老虎机、样本量估算、统计功效与留存 LTV 预测。</p>
+      <div class="tag">打开中文工具包 →</div>
+    </a>
+  </div>
+
+  <div class="banner">
+    <h2>Privacy & Design Guarantees</h2>
+    <ul>
+      <li><strong>100% Client-Side:</strong> All calculations execute in plain JavaScript inside your browser. Zero server calls, zero tracking.</li>
+      <li><strong>Robust Statistics:</strong> Implements Welch's t-test, Newcombe (Wilson score) proportion confidence intervals, and Beta-Binomial Monte Carlo posterior sampling.</li>
+      <li><strong>Export & Share:</strong> Share exact calculation states via URL hash or copy executive summaries directly to your clipboard.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>Built by <strong>Grace Ge</strong> · <a href="https://gracege.com" target="_blank" rel="noopener">gracege.com</a></p>
+  </footer>
+</div>
+</body>
+</html>
