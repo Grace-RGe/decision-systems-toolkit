@@ -1,6 +1,6 @@
 # A/B Test Calculator
 
-Part of the [Decision Systems Toolkit](../).
+Part of the [Decision Systems Toolkit](https://github.com/Grace-RGe/decision-systems-toolkit/tree/main).
 
 **Live demo:** https://gracege.com/tools/ab-test-calculator/toolkit
 
