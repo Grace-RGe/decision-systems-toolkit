@@ -1,6 +1,6 @@
 # Meeting Reality Check
 
-Part of the [Decision Systems Toolkit](https://github.com/Grace-RGe/decision-systems-toolkit).
+Part of the [Decision Systems Toolkit](https://github.com/Grace-RGe/decision-systems-toolkit/tree/main).
 
 **Live demo:** https://gracege.com/tools/meeting-reality-check/toolkit
 
