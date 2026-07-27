@@ -89,6 +89,7 @@
   .field:last-child{margin-bottom:0}
   label,.lbl{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
   .help{font-size:12.5px;color:var(--ink-3);margin:5px 0 0;line-height:1.45}
+  .sub-lbl{display:block;font-size:12px;color:var(--ink-2);margin:0 0 5px;font-weight:500}
   .row{display:flex;gap:9px}
   .row > *{min-width:0}
 
@@ -362,6 +363,21 @@
         </div>
 
         <div class="field">
+          <span class="lbl" data-i="baselines"></span>
+          <p class="help" style="margin:-2px 0 9px" data-i="baselinesHelp"></p>
+          <div class="row">
+            <div style="flex:1;min-width:0">
+              <label class="sub-lbl" for="baseFree" data-i="baseFree"></label>
+              <input type="number" id="baseFree" min="1" max="100" step="1">
+            </div>
+            <div style="flex:1;min-width:0">
+              <label class="sub-lbl" for="baseIdeal" data-i="baseIdeal"></label>
+              <input type="number" id="baseIdeal" min="5" max="480" step="5">
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
           <label for="learners" data-i="learners"></label>
           <div class="stepper">
             <button type="button" id="lminus" aria-label="&minus;">&minus;</button>
@@ -510,6 +526,10 @@
     purposeHelp:"一场带教和一次进度同步，不该用同一把尺子量。",
     learners:"其中有几位主要是来学习的？",
     learnersHelp:"新人、正在熟悉业务的同事，或者任何来接触自己还没负责过的工作的人。",
+    baselines:"这类会，多少算正常？",
+    baselinesHelp:"评分把这两个值当作“刚好”。它们默认取自上面的会议目的 —— 按你团队的实际情况调整。",
+    baseFree:"正常人数",
+    baseIdeal:"预期时长（分钟）",
     learnNote:"这部分算投资，不算损耗。这几位不计入人数扣分，工具也绝不会去计算“他们不来能省多少钱”。",
 
     assumptions:"计算假设",
@@ -532,6 +552,7 @@
     leversLabel:"改什么会让它变好",
     howLabel:"评分规则",
     leverSave:"省下", leverRecover:"大约挽回", leverYear:"／年",
+    freqSuffix:{weekly:"，而且每周都在重复", biweekly:"，而且每两周重复一次", monthly:"，而且每月重复一次", quarterly:"，而且每季度重复一次"},
 
     actTitle:"可以怎么做",
     checkTitle:"动手改之前，先问自己",
@@ -624,14 +645,14 @@
     ],
 
     how:function(prof, idealMin, purposeName){
-      return "每场会都从 100 分起算，只有四项会往下扣，没有别的。"
+      return "每场会都从 100 分起算，只有三项会往下扣，没有别的。"
         + "<ul>"
-        + "<li><b>人数</b> —— 超过 " + prof.free + " 人后，每多一人扣 3.5 分，最多扣 28 分。主要来学习的人不计入。</li>"
+        + "<li><b>人数</b> —— 超过你设定的正常人数（这里是 " + prof + " 人）之后，每多一人往下扣，且随着会越来越大、边际影响递减，最多扣 34 分。主要来学习的人不计入。</li>"
         + "<li><b>时长</b> —— 超过 " + idealMin + " 分钟后，每超一小时扣 " + Math.round(22*prof.durMult) + " 分，最多扣 26 分。</li>"
         + "<li><b>效率</b> —— 最多扣 34 分，直接取自你拖动的滑块。</li>"
-        + "<li><b>重复频率</b> —— 每周扣 12，每两周 8，每月 5，每季度 2。</li>"
         + "</ul>"
-        + "上面两个基准值来自你选择的会议目的（<b>" + purposeName + "</b>）。一场带教本来就该比一次进度同步更长、人更多，评分也按这个来。"
+        + "重复频率不单独扣分，而是放大人数那一项：一场本来就偏大的会，每周重复比只开一次要严重得多。而一场人数合适的会、或者一对一，无论开得多频繁，都不会因为重复而扣分。"
+        + "上面这两个基准值（正常人数 " + prof + "、预期时长 " + idealMin + " 分钟）是你自己定的 —— 它们默认取自会议目的（<b>" + purposeName + "</b>），但你可以改成贴合你团队的数值。工具按你的标准评分，而不是一个强加的标准。"
         + "成本不参与评分 —— 一场贵的会可以设计得很好，一场便宜的会也可能纯属浪费。";
     },
 
@@ -652,8 +673,11 @@
   };
   var BASE_TIERS = [50, 200, 800, 2500, 10000];
   var FREQ = {once:0, weekly:48, biweekly:24, monthly:12, quarterly:4};
-  var FREQ_PEN = {once:0, weekly:12, biweekly:8, monthly:5, quarterly:2};
-  var FREQ_IDX = {once:0, quarterly:1, monthly:2, biweekly:3, weekly:4};
+  /* Recurrence no longer scores on its own. Instead it AMPLIFIES the attendance
+     penalty — a big meeting repeated weekly is the real cost; a small recurring
+     meeting (a 1:1, a standup) is fine and is never penalized for repeating. */
+  var FREQ_AMP = {once:0.6, quarterly:0.75, monthly:0.9, biweekly:1.1, weekly:1.3};
+  var HEAD_K = 7;   // attendance sensitivity; tuned so 4–12 people is the discriminating band
 
   /* ---- purpose profiles: what this kind of meeting is expected to need ---- */
   var PURPOSE = {
@@ -695,6 +719,12 @@
     var prof = PURPOSE[pKey] || PURPOSE.none;
 
     var learners = clamp(Math.round(val("learners",0)), 0, people);
+
+    /* Baselines are the user's to set — "what's normal for this kind of meeting
+       on my team." They default from the purpose but can be overridden. This is
+       the org-specific context the software shouldn't presume to know. */
+    var freeBase  = clamp(Math.round(val("baseFree",  prof.free)),      1, 100);
+    var idealBase = clamp(val("baseIdeal", Math.round(prof.ideal*60)),  5, 480) / 60;
     var discussing = Math.max(0, people - learners);
 
     var hourly = salary * overhead / hoursYear;
@@ -705,13 +735,13 @@
     var annual = FREQ[S.freq] ? cost * FREQ[S.freq] : 0;
 
     /* ---- score: starts at 100, four deductions. Kept simple on purpose so it can be explained. ---- */
+    var excess = Math.max(0, discussing - freeBase);
     var pen = {
-      people: Math.min(28, Math.max(0, discussing - prof.free) * 3.5),
-      time:   Math.min(26, Math.max(0, hours - prof.ideal) * 22 * prof.durMult),
-      prod:   (1 - prod) * 34,
-      freq:   FREQ_PEN[S.freq]
+      people: Math.min(34, HEAD_K * Math.sqrt(excess) * FREQ_AMP[S.freq]),
+      time:   Math.min(26, Math.max(0, hours - idealBase) * 22 * prof.durMult),
+      prod:   (1 - prod) * 34
     };
-    var score = Math.round(clamp(100 - (pen.people + pen.time + pen.prod + pen.freq), 0, 100));
+    var score = Math.round(clamp(100 - (pen.people + pen.time + pen.prod), 0, 100));
 
     var scale = CUR[code].scale, tier = 0;
     for (var i=0;i<BASE_TIERS.length;i++){ if (cost >= BASE_TIERS[i]*scale) tier = i+1; }
@@ -719,16 +749,17 @@
     return {code:code, people:people, learners:learners, discussing:discussing, hours:hours,
             hourly:hourly, cost:cost, learnCost:learnCost, lost:lost, perMin:cost/(hours*60),
             perPerson:cost/people, annual:annual, prod:prod, pen:pen, score:score, tier:tier,
-            pKey:pKey, prof:prof};
+            pKey:pKey, prof:prof, freeBase:freeBase, idealBase:idealBase};
   }
 
   /* ================= pieces ================= */
   function driverList(r){
     var out = [];
-    out.push({k:"people", pen:r.pen.people, txt:T.states.people[r.pen.people===0?0:(r.pen.people<10?1:(r.pen.people<20?2:3))]});
+    var pTxt = T.states.people[r.pen.people===0?0:(r.pen.people<12?1:(r.pen.people<24?2:3))];
+    if (r.pen.people > 0 && S.freq !== "once" && T.freqSuffix[S.freq]) pTxt += T.freqSuffix[S.freq];
+    out.push({k:"people", pen:r.pen.people, txt:pTxt});
     out.push({k:"time",   pen:r.pen.time,   txt:T.states.time[r.pen.time===0?0:(r.pen.time<9?1:(r.pen.time<18?2:3))]});
     out.push({k:"prod",   pen:r.pen.prod,   txt:T.states.prod[r.prod>=0.85?0:(r.prod>=0.6?1:(r.prod>=0.35?2:3))]});
-    out.push({k:"freq",   pen:r.pen.freq,   txt:T.states.freq[FREQ_IDX[S.freq]]});
     out.sort(function(a,b){ return b.pen - a.pen; });
     return out;
   }
@@ -877,7 +908,7 @@
     $("levers").innerHTML = lh;
     $("leversLabel").textContent = lv.length ? T.leversLabel : "";
 
-    $("how").innerHTML = T.how(r.prof, mins(r.prof.ideal), T.purposes[r.pKey]);
+    $("how").innerHTML = T.how(r.freeBase, mins(r.idealBase), T.purposes[r.pKey]);
 
     var rc = recList(r), rh = "";
     for (var c=0;c<rc.length;c++) rh += "<li>"+esc(rc[c])+"</li>";
@@ -935,7 +966,7 @@
   }
 
   /* ================= wiring ================= */
-  ["people","length","salary","overhead","hoursYear","prod","learners","purpose"].forEach(function(id){
+  ["people","length","salary","overhead","hoursYear","prod","learners","baseFree","baseIdeal","purpose"].forEach(function(id){
     $(id).addEventListener("input", function(){ if (id === "salary") S.salaryTouched = true; render(); });
     $(id).addEventListener("change", render);
   });
@@ -988,6 +1019,14 @@
     po += '<option value="'+k+'">'+esc(T.purposes[k])+'</option>';
   }
   $("purpose").innerHTML = po;
+
+  function fillBaselines(){
+    var prof = PURPOSE[$("purpose").value] || PURPOSE.none;
+    $("baseFree").value  = prof.free;
+    $("baseIdeal").value = Math.round(prof.ideal * 60);
+  }
+  $("purpose").addEventListener("change", fillBaselines);
+  fillBaselines();
 
   var ch = "";
   for (var w=0;w<T.checks.length;w++){
