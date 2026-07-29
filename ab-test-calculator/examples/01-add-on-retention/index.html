@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example 01 — Does the add-on actually reduce churn? | Decision Systems Toolkit</title>
+<style>
+  :root{
+    --indigo:#4F46E5; --indigo-light:#EEF2FF;
+    --ink:#111827; --ink-2:#4B5563; --ink-3:#9CA3AF;
+    --line:#E5E7EB; --bg:#F8F9FB; --card:#FFFFFF;
+    --red-bg:#FEF2F2; --red-ink:#991B1B; --red-ink-2:#B91C1C;
+    --green-bg:#ECFDF5; --green-ink:#065F46; --green-ink-2:#047857;
+    --amber-bg:#FFFBEB; --amber-ink:#92400E; --amber-ink-2:#B45309;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:32px 20px;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto}
+  .eyebrow{font-size:12px;letter-spacing:.1em;color:var(--indigo);font-weight:600;text-align:center;margin:0 0 6px}
+  h1{font-size:26px;font-weight:700;text-align:center;margin:0 0 8px;letter-spacing:-.01em}
+  .sub{text-align:center;color:var(--ink-2);font-size:15px;margin:0 0 28px}
+  .meta{display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:6px;font-size:13px;color:var(--ink-2)}
+  .note{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-bottom:22px;gap:16px;flex-wrap:wrap}
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .col{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .ct{font-size:14px;font-weight:600;margin:0 0 10px;display:flex;align-items:center;gap:7px}
+  .dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+  .cw{position:relative;width:100%;height:170px;margin-bottom:10px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+  td{padding:3px 0}
+  td:first-child{color:var(--ink-2)}
+  td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .v{border-radius:8px;padding:10px 12px;margin-top:12px}
+  .v b{display:block;font-size:13px;font-weight:600;margin-bottom:2px}
+  .v span{font-size:12px;line-height:1.5}
+  .tool{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .tool .eyebrow{text-align:left;margin-bottom:12px}
+  .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:14px}
+  .tab{text-align:center;padding:9px 6px;border-radius:8px;font-size:12.5px;color:var(--ink-3);background:var(--bg);border:1px solid var(--line)}
+  .tab.on{background:var(--indigo);color:#fff;font-weight:600;border-color:var(--indigo)}
+  .tool p{font-size:13.5px;color:var(--ink-2);margin:0 0 12px}
+  .tool a{display:inline-block;font-size:13px;color:var(--indigo);text-decoration:none;font-weight:600}
+  footer{border-top:1px solid var(--line);margin-top:22px;padding-top:14px;
+    display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--ink-2);gap:16px;flex-wrap:wrap}
+  footer em{font-family:Georgia,"Times New Roman",serif;font-style:italic}
+  .disclaimer{text-align:center;font-size:11.5px;color:var(--ink-3);margin-top:20px;line-height:1.6}
+  @media (max-width:860px){.grid{grid-template-columns:1fr}.tabs{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">DECISION SYSTEMS TOOLKIT · EXAMPLE 01</p>
+  <h1>Does the add-on actually reduce churn?</h1>
+  <p class="sub">Three add-on services. The same test. Three different decisions.</p>
+
+  <div class="meta">
+    <span>Worked example · proportion comparison</span>
+    <span>Retention measured at a fixed 12-month point</span>
+  </div>
+  <div class="note">
+    <span>Retention after being <em>offered</em> the add-on — not after buying it.</span>
+    <span>Solid = offered &nbsp;·&nbsp; Dashed = control</span>
+  </div>
+
+  <div class="grid">
+
+    <div class="col">
+      <p class="ct"><span class="dot" style="background:#EA580C"></span>A · priority support</p>
+      <div class="cw"><canvas id="cA" role="img" aria-label="Offered group falls to 70 percent by month 12; control to 73 percent."></canvas></div>
+      <table>
+        <tr><td>n per arm</td><td>2,400</td></tr>
+        <tr><td>12-mo retention</td><td>70.0% / 73.0%</td></tr>
+        <tr><td>Difference</td><td><b>−3.0 pp</b></td></tr>
+        <tr><td>95% CI</td><td>−5.6 to −0.4</td></tr>
+        <tr><td>p-value</td><td>0.021</td></tr>
+      </table>
+      <div class="v" style="background:var(--red-bg)">
+        <b style="color:var(--red-ink)">Don't roll it out</b>
+        <span style="color:var(--red-ink-2)">Real, and the entire interval sits below zero.</span>
+      </div>
+    </div>
+
+    <div class="col">
+      <p class="ct"><span class="dot" style="background:#059669"></span>B · guided onboarding</p>
+      <div class="cw"><canvas id="cB" role="img" aria-label="Offered group falls to 79 percent by month 12; control to 73 percent."></canvas></div>
+      <table>
+        <tr><td>n per arm</td><td>1,800</td></tr>
+        <tr><td>12-mo retention</td><td>79.0% / 73.0%</td></tr>
+        <tr><td>Difference</td><td><b>+6.0 pp</b></td></tr>
+        <tr><td>95% CI</td><td>+3.2 to +8.8</td></tr>
+        <tr><td>p-value</td><td>&lt; 0.001</td></tr>
+      </table>
+      <div class="v" style="background:var(--green-bg)">
+        <b style="color:var(--green-ink)">Roll it out</b>
+        <span style="color:var(--green-ink-2)">Even the low end clears the switching cost.</span>
+      </div>
+    </div>
+
+    <div class="col">
+      <p class="ct"><span class="dot" style="background:#D97706"></span>C · extended warranty</p>
+      <div class="cw"><canvas id="cC" role="img" aria-label="Offered group falls to 75.4 percent by month 12; control to 73 percent; difference not statistically significant."></canvas></div>
+      <table>
+        <tr><td>n per arm</td><td>700</td></tr>
+        <tr><td>12-mo retention</td><td>75.4% / 73.0%</td></tr>
+        <tr><td>Difference</td><td><b>+2.4 pp</b></td></tr>
+        <tr><td>95% CI</td><td>−2.2 to +7.0</td></tr>
+        <tr><td>p-value</td><td>0.30</td></tr>
+      </table>
+      <div class="v" style="background:var(--amber-bg)">
+        <b style="color:var(--amber-ink)">Not a retention decision</b>
+        <span style="color:var(--amber-ink-2)">The gap looks real, but the interval crosses zero. Decide this one on margin.</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tool">
+    <p class="eyebrow">A/B TEST TOOLKIT · WHICH TAB</p>
+    <div class="tabs">
+      <div class="tab">Mean comparison</div>
+      <div class="tab on">Proportion comparison</div>
+      <div class="tab">Sample size</div>
+      <div class="tab">Statistical power</div>
+    </div>
+    <p>Retained-or-not at a fixed month is a <b>proportion</b>, so all three calls above came out of the second tab. A curve isn't a test — a rate at one point is. Use <b>Sample size</b> before you start, to find out whether the difference you care about is even detectable at the traffic you have.</p>
+    <a href="https://gracege.com/tools/ab-test-calculator/toolkit">gracege.com/tools/ab-test-calculator →</a>
+  </div>
+
+  <footer>
+    <em>The tools tell you what the numbers say. The judgment is still yours.</em>
+    <span>— Grace Ge</span>
+  </footer>
+
+  <p class="disclaimer">Figures in this example are illustrative and generated for teaching purposes. They do not describe any real company.<br>
+  This tool is provided for reference only and does not constitute professional statistical or business advice.</p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+const L=[0,1,2,3,4,5,6,7,8,9,10,11,12];
+const CTRL=[100,93.8,89.2,85.8,83.1,81.0,79.3,77.9,76.6,75.5,74.5,73.7,73.0];
+function mk(id,data,color){
+  new Chart(document.getElementById(id),{
+    type:'line',
+    data:{labels:L,datasets:[
+      {label:'Offered',data:data,borderColor:color,borderWidth:2.5,pointRadius:0,tension:.35},
+      {label:'Not offered',data:CTRL,borderColor:'#2563EB',borderWidth:2,borderDash:[5,4],pointRadius:0,tension:.35}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{title:i=>'Month '+i[0].label,label:c=>c.dataset.label+': '+c.parsed.y.toFixed(1)+'%'}}},
+      scales:{
+        y:{min:66,max:101,grid:{color:'#EEF0F3'},border:{display:false},
+           ticks:{color:'#9CA3AF',font:{size:11},stepSize:10,callback:v=>v+'%'}},
+        x:{grid:{display:false},border:{color:'#E5E7EB'},
+           ticks:{color:'#9CA3AF',font:{size:11},maxRotation:0,
+             callback:function(v){const l=this.getLabelForValue(v);return [0,3,6,9,12].includes(l)?l:'';}}}
+      }}
+  });
+}
+mk('cA',[100,92.5,87.4,83.6,80.6,78.2,76.3,74.8,73.5,72.4,71.5,70.7,70.0],'#EA580C');
+mk('cB',[100,95.0,91.3,88.5,86.3,84.5,83.1,82.0,81.1,80.4,79.8,79.3,79.0],'#059669');
+mk('cC',[100,93.9,89.6,86.4,84.0,82.1,80.5,79.2,78.1,77.2,76.4,75.8,75.4],'#D97706');
+</script>
+</body>
+</html>
