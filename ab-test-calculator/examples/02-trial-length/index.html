@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Example 02 — Was 8 more sign-ups a real result? | Decision Systems Toolkit</title>
+<style>
+  :root{
+    --indigo:#4F46E5; --ink:#111827; --ink-2:#4B5563; --ink-3:#9CA3AF;
+    --line:#E5E7EB; --bg:#F8F9FB; --card:#FFFFFF;
+    --amber-bg:#FFFBEB; --amber-ink:#92400E; --amber-ink-2:#B45309;
+    --tech-bg:#F3F4F6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px 16px;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto}
+  .eyebrow{font-size:11px;letter-spacing:.1em;color:var(--indigo);font-weight:600;text-align:center;margin:0 0 5px}
+  h1{font-size:23px;font-weight:700;text-align:center;margin:0 0 6px;letter-spacing:-.01em}
+  .sub{text-align:center;color:var(--ink-2);font-size:14px;margin:0 0 18px}
+  .meta{display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:6px;font-size:12.5px;color:var(--ink-2);gap:12px;flex-wrap:wrap}
+  .note{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-bottom:16px;gap:16px;flex-wrap:wrap}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .col{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 15px}
+  .ct{font-size:13px;font-weight:600;margin:0 0 8px}
+  .big{font-size:30px;font-weight:700;margin:2px 0;line-height:1.1}
+  .sm{font-size:12.5px;color:var(--ink-2);margin:0}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px;margin-bottom:12px}
+  .lead{font-size:14.5px;color:var(--ink);margin:0 0 10px}
+  .cw{position:relative;width:100%;height:100px}
+  .cw.short{height:96px}
+  .v{border-radius:8px;padding:10px 13px;margin-top:11px;background:var(--amber-bg)}
+  .v b{display:block;font-size:12.5px;font-weight:600;margin-bottom:2px;color:var(--amber-ink)}
+  .v span{font-size:12.5px;color:var(--amber-ink-2)}
+  details.tech{background:var(--tech-bg);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+  details.tech summary{cursor:pointer;padding:11px 15px;font-size:12.5px;font-weight:600;color:var(--ink-2);list-style:none}
+  details.tech summary::-webkit-details-marker{display:none}
+  details.tech summary::before{content:'▸ ';color:var(--indigo)}
+  details.tech[open] summary::before{content:'▾ '}
+  details.tech .body{padding:0 15px 14px;font-size:12.5px;color:var(--ink-2)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed;margin-bottom:9px}
+  td{padding:3px 0}
+  td:first-child{color:var(--ink-2)}
+  td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-bottom:10px}
+  .tab{text-align:center;padding:8px 5px;border-radius:7px;font-size:12px;color:var(--ink-3);background:var(--bg);border:1px solid var(--line)}
+  .tab.on{background:var(--indigo);color:#fff;font-weight:600;border-color:var(--indigo)}
+  .tool p{font-size:13px;color:var(--ink-2);margin:0 0 9px}
+  a{color:var(--indigo);text-decoration:none;font-weight:600}
+  footer{border-top:1px solid var(--line);margin-top:16px;padding-top:11px;
+    display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--ink-2);gap:14px;flex-wrap:wrap}
+  footer em{font-family:Georgia,"Times New Roman",serif;font-style:italic}
+  .disclaimer{text-align:center;font-size:11px;color:var(--ink-3);margin-top:14px;line-height:1.55}
+  @media (max-width:820px){.grid2{grid-template-columns:1fr}.tabs{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">DECISION SYSTEMS TOOLKIT · EXAMPLE 02</p>
+  <h1>Was 8 more sign-ups a real result?</h1>
+  <p class="sub">A 14-day trial versus a 30-day trial. The honest answer took three questions, not one.</p>
+
+  <div class="meta">
+    <span>Worked example · proportion comparison + sample size</span>
+    <span>Sign-ups counted on one fixed calendar date</span>
+  </div>
+  <div class="note">
+    <span>Both groups measured on the same date, after every trial had ended — otherwise the 30-day version simply had 16 more days.</span>
+    <span>600 people per group</span>
+  </div>
+
+  <div class="grid2">
+    <div class="col">
+      <p class="ct">14-day trial</p>
+      <p class="big" style="color:#2563EB">43</p>
+      <p class="sm">signed up, out of 600 &nbsp;·&nbsp; 7.2%</p>
+    </div>
+    <div class="col">
+      <p class="ct">30-day trial</p>
+      <p class="big" style="color:#059669">51</p>
+      <p class="sm">signed up, out of 600 &nbsp;·&nbsp; 8.5%</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="lead"><b>The 30-day version won by 8 people.</b> Written as a percentage, that's an 18.6% lift — a number that moves through a team fast. So: is 8 people a real difference, or is it luck?</p>
+    <div class="cw"><canvas id="cRange" role="img" aria-label="The observed gap is 8 people, but the plausible range for the true gap runs from about minus 10 to plus 27 people, crossing zero."></canvas></div>
+    <div class="v">
+      <b>8 sits inside a much wider range of "could be anything"</b>
+      <span>The data is consistent with the 30-day version being worse by about 10 people, or better by nearly 27. An 8-person edge doesn't rule either one out.</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <p class="lead"><b>The part worth sitting with: this test was never able to answer the question.</b> With 600 people per group, the smallest gap it could reliably spot was about 28 people. The team was hoping to find 8.</p>
+    <p class="sm" style="margin-bottom:11px">That limit wasn't set by the result. It was set the day someone chose to run 600 people per group.</p>
+    <div class="cw short"><canvas id="cSize" role="img" aria-label="The test used 600 people per group. Reliably detecting a gap of 8 people would need about 6,400 per group."></canvas></div>
+    <p class="sm" style="margin-top:8px">Catching a gap this small takes roughly <b>6,400 people per group</b> — about eleven times what they ran. Small differences are expensive to prove, and the cost climbs far faster than most people expect.</p>
+  </div>
+
+  <details class="tech">
+    <summary>The statistics behind those numbers</summary>
+    <div class="body">
+      <table>
+        <tr><td>Conversion, 14-day vs 30-day</td><td>7.17% vs 8.50%</td></tr>
+        <tr><td>Difference</td><td>+1.33 pp &nbsp;(+18.6% relative) &nbsp;≈ 8 people</td></tr>
+        <tr><td>p-value (pooled z-test)</td><td>0.39</td></tr>
+        <tr><td>95% CI on the difference (Newcombe)</td><td>−1.7 to +4.4 pp &nbsp;≈ −10 to +27 people</td></tr>
+        <tr><td>Minimum detectable effect at n=600</td><td>≈ 66% relative lift (7.17% → 11.9%) &nbsp;≈ 28 people</td></tr>
+        <tr><td>n required to detect +18.6%</td><td>≈ 6,400 per group</td></tr>
+      </table>
+      <p style="margin:0 0 8px">The people-count range is the percentage-point confidence interval converted to raw counts (pp ÷ 100 × 600 per group), which is exact when both groups are the same size. Assumptions: 95% significance, 80% power, two-sided.</p>
+      <p style="margin:0">One design note that matters more than the statistics: a 30-day trial reaches its end 16 days later than a 14-day trial. If sign-ups were counted at each group's own trial end, the longer arm would have had more elapsed time, and the comparison would measure duration rather than trial length. Both arms here are measured on a single calendar date, late enough that every trial in both arms has finished. Full source code is on <a href="https://github.com/Grace-RGe/decision-systems-toolkit">GitHub</a>.</p>
+    </div>
+  </details>
+
+  <div class="panel tool">
+    <p class="eyebrow" style="text-align:left;margin-bottom:9px">A/B TEST TOOLKIT · WHICH TABS</p>
+    <div class="tabs">
+      <div class="tab">Mean comparison</div>
+      <div class="tab on">Proportion comparison</div>
+      <div class="tab on">Sample size</div>
+      <div class="tab">Statistical power</div>
+    </div>
+    <p>Signed-up-or-not is a <b>proportion</b>, so that tab handles the first question. The second one — <i>could this test have seen it?</i> — comes from <b>Sample size</b>, and it's worth running before the test, not after.</p>
+    <a href="https://gracege.com/tools/ab-test-calculator/toolkit">gracege.com/tools/ab-test-calculator →</a>
+  </div>
+
+  <footer>
+    <em>The tools tell you what the numbers say. The judgment is still yours.</em>
+    <span>— Grace Ge</span>
+  </footer>
+
+  <p class="disclaimer">Figures in this example are illustrative and generated for teaching purposes. They do not describe any real company.<br>
+  This tool is provided for reference only and does not constitute professional statistical or business advice.</p>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script>
+const zeroLineMarker = {
+  id:'zeroLineMarker',
+  afterDatasetsDraw(chart){
+    const {ctx, chartArea, scales} = chart;
+    const x0 = scales.x.getPixelForValue(0);
+    ctx.save();
+    ctx.strokeStyle='#111827'; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(x0, chartArea.top+4); ctx.lineTo(x0, chartArea.bottom-4); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#111827'; ctx.font='11px -apple-system,Segoe UI,Roboto,sans-serif';
+    ctx.textAlign='center'; ctx.fillText('no difference', x0, chartArea.top-1);
+    const xp = scales.x.getPixelForValue(8);
+    const yc = (chartArea.top + chartArea.bottom)/2;
+    ctx.beginPath(); ctx.arc(xp, yc, 5.5, 0, Math.PI*2);
+    ctx.fillStyle='#059669'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    ctx.restore();
+  }
+};
+
+new Chart(document.getElementById('cRange'), {
+  type:'bar',
+  data:{ labels:[''], datasets:[{ data:[[-10.4, 26.5]],
+    backgroundColor:'rgba(79,70,229,.18)', borderColor:'#4F46E5', borderWidth:1.5,
+    borderRadius:4, barPercentage:0.42 }] },
+  options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    layout:{padding:{top:14}},
+    plugins:{ legend:{display:false},
+      tooltip:{ callbacks:{ label:()=>'Plausible range: −10 to +27 people  ·  observed gap: 8' } } },
+    scales:{
+      x:{ min:-16, max:32, grid:{color:'#EEF0F3'}, border:{display:false},
+          ticks:{color:'#9CA3AF', font:{size:11}, stepSize:8,
+                 callback:v=>(v>0?'+':'')+v} },
+      y:{ grid:{display:false}, border:{display:false}, ticks:{display:false} }
+    } },
+  plugins:[zeroLineMarker]
+});
+
+new Chart(document.getElementById('cSize'), {
+  type:'bar',
+  data:{ labels:['What they ran','What an 8-person gap needs'],
+    datasets:[{ data:[600, 6400], backgroundColor:['#D97706','#4F46E5'],
+      borderRadius:5, barPercentage:0.55 }] },
+  options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false},
+      tooltip:{ callbacks:{ label:c=>c.parsed.x.toLocaleString()+' people per group' } } },
+    scales:{
+      x:{ min:0, max:7000, grid:{color:'#EEF0F3'}, border:{display:false},
+          ticks:{color:'#9CA3AF', font:{size:11}, callback:v=>v.toLocaleString()} },
+      y:{ grid:{display:false}, border:{display:false},
+          ticks:{color:'#4B5563', font:{size:12}} }
+    } }
+});
+</script>
+</body>
+</html>
