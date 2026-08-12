@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Would You Trust the Store That "Worked"? — A/B Test Example</title>
+<meta name="description" content="An A/B testing example showing why a significant result can be misleading when many store types are tested.">
+<style>
+:root{--indigo:#4F46E5;--indigo-light:#EEF2FF;--ink:#111827;--ink-2:#4B5563;--ink-3:#9CA3AF;--line:#E5E7EB;--bg:#F8F9FB;--card:#FFFFFF;--red-bg:#FEF2F2;--red-ink:#991B1B;--red-ink-2:#B91C1C;--green-bg:#ECFDF5;--green-ink:#065F46;--green-ink-2:#047857;--amber-bg:#FFFBEB;--amber-ink:#92400E;--amber-ink-2:#B45309;--blue-bg:#EFF6FF;--blue-ink:#1E40AF}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;padding:32px 20px;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}.wrap{max-width:1040px;margin:0 auto}
+header{padding:0 0 0;border:0}.eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--indigo);font-weight:600;text-align:center;margin:0 0 6px}h1{font-size:26px;font-weight:700;text-align:center;margin:0 0 8px;letter-spacing:-.01em;line-height:1.2}h2{font-size:19px;font-weight:700;line-height:1.25;margin:0 0 7px}h3{font-size:14px;margin:0 0 7px}p{margin:0 0 14px}.dek,.lead{font-size:15px;color:var(--ink-2);max-width:850px}.dek{text-align:center;margin:0 auto 28px}
+.meta{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:8px;margin-bottom:6px;font-size:13px;color:var(--ink-2);gap:16px}.note{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-3);margin-bottom:22px;gap:16px;flex-wrap:wrap}
+section{padding:0;margin:18px 0}.grid{display:grid;gap:18px}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:none}.soft{background:var(--card);box-shadow:none}.question{margin-top:18px;border-left:3px solid var(--indigo);background:var(--indigo-light);padding:13px 15px;border-radius:0 8px 8px 0;font-size:14px}.pill{display:inline-block;padding:4px 8px;border-radius:7px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}.red{background:var(--red-bg);color:var(--red-ink)}.green{background:var(--green-bg);color:var(--green-ink)}.yellow{background:var(--amber-bg);color:var(--amber-ink)}
+.metric{display:flex;justify-content:space-between;gap:18px;align-items:end;padding:10px 0;border-bottom:1px solid var(--line)}.metric:last-child{border-bottom:0}.label{font-size:12px;color:var(--ink-3)}.value{font-size:25px;line-height:1;white-space:nowrap;font-weight:600}.equation{background:#F8F9FB;color:var(--ink);border:1px solid var(--line);padding:12px 14px;border-radius:9px;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);font-size:12.5px}th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{background:var(--bg);color:var(--ink-3);font-weight:600}tr:last-child td{border-bottom:0}.winner{background:var(--amber-bg)}.loser{background:var(--red-bg)}
+.callout{margin-top:18px;padding:18px;border-radius:10px;background:#272521;color:#fff}.callout .eyebrow{text-align:left;color:#fff;margin-bottom:8px}.callout h2,.callout h3{color:#fff}.callout p{color:#eee8df}.quote{font-size:22px;line-height:1.35}.big{font-size:52px;line-height:.95;font-weight:700}.ask{padding:14px;border-radius:9px;background:var(--indigo-light);border:1px solid #D9D6FE;margin-top:10px}.ask strong{display:block;font-size:13.5px;margin-bottom:3px;color:var(--indigo)}.steps{display:grid;gap:10px}.step{display:grid;grid-template-columns:32px 1fr;gap:10px}.step:before{content:counter(step);counter-increment:step;width:32px;height:32px;border-radius:7px;display:grid;place-items:center;background:var(--indigo);color:white;font-weight:700;font-size:12px}.steps{counter-reset:step}
+details{background:#fff;border:1px solid var(--line);border-radius:9px;padding:0 14px}summary{cursor:pointer;padding:12px 0;font-weight:650;font-size:13px}.inside{padding:0 0 14px;color:var(--ink-2);font-size:12.5px}.note2{font-size:12px;color:var(--ink-3)}
+.tool{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px}.tool .eyebrow{text-align:left;margin-bottom:12px}.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:14px}.tab{text-align:center;padding:9px 6px;border-radius:8px;font-size:12.5px;color:var(--ink-3);background:var(--bg);border:1px solid var(--line)}.tab.on{background:var(--indigo);color:#fff;font-weight:600;border-color:var(--indigo)}.tool p{font-size:13.5px;color:var(--ink-2);margin:0 0 12px}.tool a{display:inline-block;font-size:13px;color:var(--indigo);text-decoration:none;font-weight:600}
+footer{border-top:1px solid var(--line);margin-top:22px;padding-top:14px;display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--ink-2);gap:16px;flex-wrap:wrap}footer em{font-family:Georgia,"Times New Roman",serif;font-style:italic}.disclaimer{text-align:center;font-size:11.5px;color:var(--ink-3);margin-top:20px;line-height:1.6}
+@media(max-width:760px){body{padding:24px 14px}.wrap{padding:0}.two{grid-template-columns:1fr}.meta{flex-direction:column;gap:2px}.tabs{grid-template-columns:repeat(2,1fr)}table{font-size:11.5px}th,td{padding:7px 6px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="eyebrow">DECISION SYSTEMS TOOLKIT · EXAMPLE 03</div>
+<h1>Would You Trust the Store That "Worked"?</h1>
+<p class="dek">Eight store types test the same promotion. One looks like a winner. Another looks like a loser. The promotion actually did nothing anywhere. So what happened?</p>
+<div class="meta"><span>Worked example · store-level promotion test</span><span>Primary outcome: 4-pack add-on rate</span></div>
+<div class="note"><span>Illustrative national chain · fictional data · designed for teaching</span><span>Promotion ran for 4 weeks in September</span></div>
+</div></header>
+
+<main>
+<section><div class="wrap"><div class="grid two">
+<div><h2>The business question</h2>
+<p class="lead">COW Ice Cream has 400+ stores. Take-home 4-packs have better margins and can drive repeat purchases, but only about 12% of transactions include one.</p>
+<div class="question"><strong>Should we run a promotion to increase 4-pack purchases nationwide?</strong></div></div>
+<div class="card soft"><h3>The promotion</h3>
+<div class="metric"><div><div class="label">Product</div>Take-home 4-pack only</div><div class="value">$12</div></div>
+<div class="metric"><div><div class="label">Regular price</div>Same product</div><div class="value">$15</div></div>
+<div class="metric"><div><div class="label">Campaign</div>4 weeks in September</div><div class="value">28d</div></div>
+<p class="note">At checkout, the register prompts the cashier to offer the 4-pack. No external advertising, email, app push, or social campaign.</p>
+</div></div></div></section>
+
+<section><div class="wrap"><h2>What changes — and what doesn't?</h2><p class="lead">A clean experiment changes one thing on purpose and keeps the important alternatives as similar as possible.</p>
+<div class="grid two" style="margin-top:22px">
+<div class="card"><span class="pill red">Changes</span><h3 style="margin-top:14px">Promotion ON vs OFF</h3><p>The checkout offer is shown in promotion stores and not shown in control stores.</p></div>
+<div class="card"><span class="pill green">Held constant</span><h3 style="margin-top:14px">Everything we can reasonably control</h3><p>Same product, same four-week window, same script, same table card, same training, and no other promotions during the test.</p></div>
+</div>
+<div class="card" style="margin-top:18px"><h3>Why test stores, not individual shoppers?</h3><p>The checkout card is visible to everyone in a store. You cannot randomly show it to one shopper and hide it from the next without changing the experience. So the promotion is assigned at the <strong>store level</strong>.</p><p>We select 16 stores and make 8 matched pairs. Within each pair, one store is randomly assigned to promotion and the other to control. Stores are matched on store type, recent transaction volume, and recent 4-pack attach rate.</p></div>
+</div></section>
+
+<section><div class="wrap"><h2>What are we measuring?</h2><div class="grid two" style="margin-top:22px">
+<div class="card"><span class="pill yellow">Primary metric</span><h3 style="margin-top:14px">4-pack attach rate</h3><p>The percentage of transactions that include at least one 4-pack.</p><div class="equation">4-pack attach rate = transactions with ≥1 4-pack ÷ total transactions</div><div class="metric"><div><div class="label">Baseline</div>About one in eight transactions</div><div class="value">12%</div></div><p class="note">One primary metric is decided before the results are seen.</p></div>
+<div class="card"><span class="pill green">Guardrails</span><h3 style="margin-top:14px">Things we still watch</h3><div class="metric"><div>Single-scoop sales / transaction</div><div class="label">Cannibalization</div></div><div class="metric"><div>Average order value</div><div class="label">Discount impact</div></div><div class="metric"><div>Gross profit / transaction</div><div class="label">Business economics</div></div><div class="metric"><div>Daily transaction count</div><div class="label">Unexpected traffic change</div></div></div>
+</div></div></section>
+
+<section><div class="wrap"><h2>First, look at the overall result</h2><p class="lead">Across all 16 stores, each group had about 16,000 transactions during the four-week test.</p>
+<div class="grid two" style="margin-top:22px"><div class="card"><div class="label">Control</div><div class="big">12.15%</div><p>1,944 4-pack transactions out of 16,000.</p></div><div class="card"><div class="label">Promotion</div><div class="big">12.19%</div><p>1,951 4-pack transactions out of 16,000.</p></div></div>
+<div class="callout"><h3>Seven more 4-packs.</h3><p style="font-size:20px">16,000 transactions in each group. The difference is only 7 purchases.</p><p>The overall two-proportion test gives <strong>p = 0.91</strong>. There is no evidence here that the promotion changed the overall attach rate.</p></div>
+</div></section>
+
+<section><div class="wrap"><h2>Then someone asks: "What about the store types?"</h2><p class="lead">So the team looks at the eight store-type comparisons separately.</p>
+<div style="overflow-x:auto;margin-top:22px"><table><thead><tr><th>Store type</th><th>Control</th><th>Promotion</th><th>Difference</th><th>p-value</th></tr></thead><tbody>
+<tr><td>Downtown</td><td>11.9%</td><td>12.55%</td><td>+13</td><td>0.55</td></tr>
+<tr><td>Suburban</td><td>12.3%</td><td>11.7%</td><td>−12</td><td>0.57</td></tr>
+<tr><td>Mall</td><td>12.0%</td><td>12.7%</td><td>+14</td><td>0.52</td></tr>
+<tr><td>Roadside</td><td>12.5%</td><td>11.95%</td><td>−11</td><td>0.61</td></tr>
+<tr><td>College town</td><td>11.8%</td><td>12.55%</td><td>+15</td><td>0.49</td></tr>
+<tr><td>Coastal</td><td>12.2%</td><td>11.5%</td><td>−14</td><td>0.50</td></tr>
+<tr class="winner"><td><strong>Airport</strong></td><td>11.9%</td><td><strong>14.3%</strong></td><td><strong>+48</strong></td><td><strong>0.024</strong></td></tr>
+<tr class="loser"><td><strong>Small town</strong></td><td>12.6%</td><td><strong>10.3%</strong></td><td><strong>−46</strong></td><td><strong>0.022</strong></td></tr>
+</tbody></table></div>
+<div class="grid two" style="margin-top:20px"><div class="card" style="background:var(--amber-bg)"><span class="pill yellow">Looks like a winner</span><h3 style="margin-top:12px">Airport: +48</h3><p>14.3% vs 11.9%. <strong>p = 0.024.</strong></p><p>"Travelers want something to take home." The story sounds plausible.</p></div><div class="card" style="background:var(--red-bg)"><span class="pill red">Looks like a loser</span><h3 style="margin-top:12px">Small town: −46</h3><p>10.3% vs 12.6%. <strong>p = 0.022.</strong></p><p>Almost the mirror image of the airport result.</p></div></div>
+</div></section>
+
+<section><div class="wrap"><div class="callout"><div class="eyebrow" style="color:#f4d96b">The twist</div><h2>The promotion actually did nothing.</h2><p class="quote">In this teaching example, the true effect is zero in every store type.</p><p>The airport result and the small-town result are random fluctuations. The numbers are real. The apparent "winner" is not.</p></div></div></section>
+
+<section><div class="wrap"><h2>Eight chances to get fooled</h2><p class="lead">A single test at the 5% significance level has a 5% chance of producing a false alarm when there is no real effect. But we didn't run one test. We looked at eight.</p>
+<div class="card" style="margin-top:22px"><div class="big">≈ 34%</div><p style="font-size:20px">chance of seeing <strong>at least one</strong> false "winner" across eight independent tests when the true effect is zero everywhere.</p><div class="equation">1 − (0.95)<sup>8</sup> ≈ 0.34</div><p class="note">Roughly one in three such experiments would produce at least one false alarm under these assumptions.</p></div>
+<div class="card" style="margin-top:18px"><h3>And seeing two is unusual — but not impossible</h3><p>In this example, both Airport and Small town crossed the ordinary 0.05 threshold. The chance of seeing two or more false positives across eight independent tests is about <strong>5.7%</strong>.</p>
+<details><summary>For readers who want the statistical detail</summary><div class="inside">A simple Bonferroni adjustment would divide the 0.05 threshold by 8: <strong>0.05 ÷ 8 = 0.00625</strong>. Neither 0.024 nor 0.022 clears that stricter threshold. This is a teaching example; a production experiment should choose an appropriate multiple-testing strategy in advance.</div></details></div>
+</div></section>
+
+<section><div class="wrap"><h2>What should happen next?</h2><div class="steps" style="margin-top:24px">
+<div class="step"><div><h3>Don't roll out to airports because Airport "won."</h3><p>The result is a signal worth investigating, not proof that the promotion works better there.</p></div></div>
+<div class="step"><div><h3>Write down the question before the next test.</h3><p>If Airport is genuinely important, make it a planned hypothesis and design a test specifically for it.</p></div></div>
+<div class="step"><div><h3>Keep the overall business result in view.</h3><p>The nationwide test was essentially flat. A segment result should not quietly replace the primary decision metric.</p></div></div>
+</div></div></section>
+
+<section><div class="wrap"><h2>Who should ask what?</h2><p class="lead">The order matters. First, the person presenting the analysis should be able to answer the basic questions. Then the decision-maker can interrogate the evidence without needing to become a statistician.</p>
+<div class="card" style="margin-top:18px"><span class="pill green">For the person presenting the result</span>
+<div class="steps" style="margin-top:14px">
+<div class="step"><div><h3>"What did we decide to measure before the test?"</h3><p>One primary metric. Not the metric that happened to look best afterward.</p></div></div>
+<div class="step"><div><h3>"What else did we agree to keep an eye on?"</h3><p>Margin, basket value, cannibalization, traffic, and execution issues are guardrails — not substitutes for the primary metric.</p></div></div>
+<div class="step"><div><h3>"How many store types did we examine?"</h3><p>Show the full search space, not only the airport chart.</p></div></div>
+<div class="step"><div><h3>"Which findings were hypotheses before the test, and which were discovered afterward?"</h3><p>That distinction changes how strongly a result should be presented.</p></div></div>
+</div></div>
+<div class="card" style="margin-top:18px"><span class="pill yellow">For the decision-maker</span>
+<div class="ask"><strong>1 · "How many places did you look?"</strong><span>Eight store types means eight chances for noise to look interesting.</span></div>
+<div class="ask"><strong>2 · "Was Airport a hypothesis before we saw the result?"</strong><span>If not, treat it as a lead for the next test, not proof from this one.</span></div>
+<div class="ask"><strong>3 · "What was the overall result?"</strong><span>The national result was essentially flat: +7 boxes, p = 0.91.</span></div>
+<div class="ask"><strong>4 · "What would have made us roll out?"</strong><span>If there was no decision rule before the test, it is easy to invent one afterward.</span></div>
+<div class="ask"><strong>5 · "What would make us stop or test again?"</strong><span>A good analysis should make the next decision clearer, not merely give the current slide a winner.</span></div>
+</div>
+<div class="callout"><p class="quote">The slide shows you the winner. It doesn't show you how many stores you looked at before you found it.</p></div>
+</div></section>
+
+<section><div class="wrap"><h2>One honest limitation</h2><details open><summary>This is a teaching example, not a production experiment plan.</summary><div class="inside">
+<p>The promotion is assigned at the store level, while the simplified calculations above treat transactions as independent observations. A production analysis should account for the fact that transactions within the same store are related.</p>
+<p>This test runs in September. A September result should not automatically be assumed to apply to July or another seasonal period.</p>
+<p>Most importantly, this example deliberately sets the true promotion effect to zero everywhere so that the multiple-comparisons problem is easy to see. Real experiments are messier: genuine effects, store differences, execution differences, and random noise can all coexist.</p>
+</div></details></div></section>
+</main>
+
+<div class="wrap"><div class="tool">
+<p class="eyebrow">A/B TEST TOOLKIT · WHICH TAB</p>
+<div class="tabs"><div class="tab">Mean comparison</div><div class="tab on">Proportion comparison</div><div class="tab">Sample size</div><div class="tab">Statistical power</div></div>
+<p>Purchased-or-not at each store is a <b>proportion</b>, so that tab handles each individual test correctly on its own. What it can't do — yet — is warn you when you're running many of them at once and reading them side by side. That judgment call is still yours.</p>
+<a href="https://gracege.com/tools/ab-test-calculator/toolkit">gracege.com/tools/ab-test-calculator →</a>
+</div></div>
+
+<footer><div class="wrap"><div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap"><em>The tools tell you what the numbers say. The judgment is still yours.</em><span>— Grace Ge</span></div><p class="disclaimer">Figures in this example are illustrative and generated for teaching purposes. They do not describe any real company.<br>This example simplifies the store-level analysis for teaching; real store experiments should account for clustering and the experimental unit. This tool is provided for reference only and does not constitute professional statistical or business advice.</p></div></footer>
+</body>
+</html>
