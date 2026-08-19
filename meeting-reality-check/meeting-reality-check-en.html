@@ -644,11 +644,11 @@
       "If you're the one invited: can you name your role here? If not, ask the organizer."
     ],
 
-    how:function(prof, idealMin, purposeName){
+    how:function(prof, idealMin, purposeName, durMult){
       return "Every meeting starts at 100. Three things subtract from it, and nothing else does."
         + "<ul>"
         + "<li><b>Attendance</b> — points come off for each person beyond what you've set as normal (here, " + prof + "), with a diminishing effect as the room grows, capped at 34. People attending to learn are not counted.</li>"
-        + "<li><b>Length</b> — " + Math.round(22*prof.durMult) + " points per hour beyond " + idealMin + " min, capped at 26.</li>"
+        + "<li><b>Length</b> — " + Math.round(22*durMult) + " points per hour beyond " + idealMin + " min, capped at 26.</li>"
         + "<li><b>Productivity</b> — up to 34 points, taken straight from the slider.</li>"
         + "</ul>"
         + "Recurrence isn't scored on its own. Instead it scales the attendance penalty: a meeting that's already larger than it needs to be counts for more when it repeats every week than when it happens once. A right-sized meeting or a 1:1 is never penalized for repeating, however often it runs. "
@@ -908,7 +908,7 @@
     $("levers").innerHTML = lh;
     $("leversLabel").textContent = lv.length ? T.leversLabel : "";
 
-    $("how").innerHTML = T.how(r.freeBase, mins(r.idealBase), T.purposes[r.pKey]);
+    $("how").innerHTML = T.how(r.freeBase, mins(r.idealBase), T.purposes[r.pKey], r.prof.durMult);
 
     var rc = recList(r), rh = "";
     for (var c=0;c<rc.length;c++) rh += "<li>"+esc(rc[c])+"</li>";
