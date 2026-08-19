@@ -644,11 +644,11 @@
       "如果你是被邀请的一方：你能说出自己在这场会里的角色吗？说不出来，就去问组织者。"
     ],
 
-    how:function(prof, idealMin, purposeName){
+    how:function(prof, idealMin, purposeName, durMult){
       return "每场会都从 100 分起算，只有三项会往下扣，没有别的。"
         + "<ul>"
         + "<li><b>人数</b> —— 超过你设定的正常人数（这里是 " + prof + " 人）之后，每多一人往下扣，且随着会越来越大、边际影响递减，最多扣 34 分。主要来学习的人不计入。</li>"
-        + "<li><b>时长</b> —— 超过 " + idealMin + " 分钟后，每超一小时扣 " + Math.round(22*prof.durMult) + " 分，最多扣 26 分。</li>"
+        + "<li><b>时长</b> —— 超过 " + idealMin + " 分钟后，每超一小时扣 " + Math.round(22*durMult) + " 分，最多扣 26 分。</li>"
         + "<li><b>效率</b> —— 最多扣 34 分，直接取自你拖动的滑块。</li>"
         + "</ul>"
         + "重复频率不单独扣分，而是放大人数那一项：一场本来就偏大的会，每周重复比只开一次要严重得多。而一场人数合适的会、或者一对一，无论开得多频繁，都不会因为重复而扣分。"
@@ -908,7 +908,7 @@
     $("levers").innerHTML = lh;
     $("leversLabel").textContent = lv.length ? T.leversLabel : "";
 
-    $("how").innerHTML = T.how(r.freeBase, mins(r.idealBase), T.purposes[r.pKey]);
+    $("how").innerHTML = T.how(r.freeBase, mins(r.idealBase), T.purposes[r.pKey], r.prof.durMult);
 
     var rc = recList(r), rh = "";
     for (var c=0;c<rc.length;c++) rh += "<li>"+esc(rc[c])+"</li>";
