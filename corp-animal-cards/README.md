@@ -108,10 +108,11 @@ folder or the standalone build, never the bare HTML.
 ### Two builds
 
 - **Folder build** (this directory) — HTML plus 48 images. For GitHub and
-  GitHub Pages.
+  GitHub Pages. This is the only version currently distributed.
 - **Standalone build** (`corp-animal-cards-standalone.html`) — the same tool with
   all 48 images embedded as base64 data URIs, ~10 MB, one file, double-click to
-  run, fully offline. For direct download.
+  run, fully offline. Built from the same source as a reference; not
+  currently distributed.
 
 Both are generated from the same source; the standalone build only swaps image
 file references for embedded data.
