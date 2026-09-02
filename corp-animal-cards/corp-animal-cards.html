@@ -3,14 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Corp Animal Cards — Which workplace animal are you?</title>
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+<title>Working Style Cards — Twelve zodiacs, four workplace archetypes</title>
 <style>
   :root{
+    color-scheme:light;
     --paper:#F4EFE3; --card:#FFFFFF; --ink:#2A2723; --muted:#7A736A;
     --hair:#E4DCCB; --hair-soft:#EFE8D9;
     --navy:#1E3A5F; --red:#9B2C2C; --green:#445A2E; --plum:#5B3A78;
   }
-  *{box-sizing:border-box} html,body{margin:0}
+  *{box-sizing:border-box} html,body{margin:0;background:#F4EFE3}
   body{background:var(--paper);color:var(--ink);
     font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,
       "PingFang SC","Microsoft YaHei",sans-serif;
@@ -136,11 +139,11 @@
 
   <div class="mast">
     <div class="seal" id="mastSeal">?</div>
-    <span class="eyebrow" id="mastLabel">Corp Animal Cards</span>
+    <span class="eyebrow" id="mastLabel">Working Style Cards</span>
   </div>
 
   <section class="screen active" id="intro">
-    <h1>Which workplace animal<span class="sub">are you?</span></h1>
+    <h1>Working Style Cards<span class="sub">Twelve zodiacs, four workplace archetypes.</span></h1>
     <p class="lede">Pick your Chinese zodiac, answer eight quick questions, get your card. No sign-up, nothing to install.</p>
     <p class="fineprint">Not a personality test. It describes how you tend to operate at work right now &mdash; not who you are forever. No card is better than another.</p>
     <button class="btn" id="startBtn">Start &rarr;</button>
@@ -184,7 +187,7 @@
     </p>
     <p class="fquote">The tools tell you what the numbers say. The judgment is still yours.</p>
     <p class="fcredit">— Grace Ge · gracege.com</p>
-    <p class="fdisc">Corp Animal Cards describes how people tend to operate at work. It is not a personality test,
+    <p class="fdisc">Working Style Cards · The Corp Animal Cards edition. It describes how people tend to operate at work. It is not a personality test,
       and it is not intended for hiring, screening, or evaluation decisions.</p>
     <p id="artCheck" class="fdisc"></p>
   </footer>
@@ -327,7 +330,7 @@ function renderZodiac(){
 function startQuiz(){ step=0; answers.fill(null); buildOrder();
   const z=ZBY[zKey];
   $("mastSeal").textContent=z.char;
-  $("mastLabel").textContent="Corp Animal Cards · "+z.en;
+  $("mastLabel").textContent="Working Style Cards · "+z.en;
   renderQuestion(); show("quiz");
 }
 function renderQuestion(){
@@ -353,7 +356,7 @@ function pickWinner(s){const max=Math.max(...ORDER.map(k=>s[k]));const leaders=O
   if(leaders.length===1)return leaders[0];const q8=answers[QUESTIONS.length-1];
   if(leaders.includes(q8))return q8;return leaders[0];}
 
-function imageSrc(a){ return ARCH[a].num+"-"+ARCH[a].file+"_"+ZBY[zKey].file+".jpg"; }
+function imageSrc(a){ return ARCH[a].num+"-"+ARCH[a].file+"_"+ZBY[zKey].file+".png"; }
 
 function finish(){
   const s=score(), winner=pickWinner(s), a=ARCH[winner], z=ZBY[zKey], hex=ACCENT_HEX[a.accent];
@@ -395,7 +398,7 @@ lTool.href=LINKS.tool; lLib.href=LINKS.library; lGit.href=LINKS.github;
 if(ART_CHECK){
   const miss=[];let done=0,total=ZODIAC.length*ORDER.length;
   ZODIAC.forEach(z=>ORDER.forEach(k=>{
-    const src=ARCH[k].num+"-"+ARCH[k].file+"_"+z.file+".jpg";
+    const src=ARCH[k].num+"-"+ARCH[k].file+"_"+z.file+".png";
     const im=new Image();
     im.onload=im.onerror=function(ev){ if(ev.type==="error") miss.push(src);
       if(++done===total) artCheck.textContent = miss.length
@@ -410,7 +413,7 @@ $("zBack").addEventListener("click",()=>show("intro"));
 $("backBtn").addEventListener("click",()=>{if(step>0){step--;renderQuestion();}});
 $("retakeBtn").addEventListener("click",()=>{
   zKey=null; const ms=$("mastSeal"); ms.style.borderColor="";ms.style.color="";ms.textContent="?";
-  $("mastLabel").textContent="Corp Animal Cards"; show("intro");
+  $("mastLabel").textContent="Working Style Cards"; show("intro");
 });
 </script>
 </body>
