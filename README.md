@@ -6,10 +6,11 @@ Each tool runs entirely in your browser. No account, no installation, no data le
 
 ## Tools
 
-| Tool | What it answers | |
+| Tool | What it answers | Try it |
 |---|---|---|
 | **[A/B Test Calculator](ab-test-calculator/)** | Is this result real, and can you trust it? | [Live demo](https://gracege.com/tools/ab-test-calculator/toolkit) |
 | **[Meeting Reality Check](meeting-reality-check/)** | What does this meeting cost, and is it worth it? | [Live demo](https://gracege.com/tools/meeting-reality-check/toolkit) |
+| **[Working Style Cards](corp-animal-cards/)** | How do you actually contribute at work — and what does it cost you? | [Live demo](https://gracege.com/tools/corp-animal-cards/toolkit) |
 
 Each tool has its own folder with full documentation — click a tool name above.
 
