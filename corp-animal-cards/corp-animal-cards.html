@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corp Animal Cards — Which workplace animal are you?</title>
+<style>
+  :root{
+    --paper:#F4EFE3; --card:#FFFFFF; --ink:#2A2723; --muted:#7A736A;
+    --hair:#E4DCCB; --hair-soft:#EFE8D9;
+    --navy:#1E3A5F; --red:#9B2C2C; --green:#445A2E; --plum:#5B3A78;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,
+      "PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:32px 20px 64px}
+  #intro,#zodiac,#quiz{max-width:660px}
+
+  .mast{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .seal{width:40px;height:40px;border-radius:50%;flex:0 0 auto;border:2px solid var(--ink);
+    display:grid;place-items:center;font-size:20px;font-weight:700;color:var(--ink);
+    transition:border-color .3s,color .3s}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+
+  .screen{display:none;animation:fade .35s ease both}
+  .screen.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.screen{animation:none}}
+
+  h1{font-size:clamp(30px,6vw,46px);line-height:1.05;font-weight:800;letter-spacing:-.01em;margin:14px 0 10px}
+  h1 .sub{display:block;color:var(--muted);font-weight:800}
+  h2{font-size:clamp(22px,4vw,30px);font-weight:800;margin:8px 0 6px}
+  .lede{font-size:17px;color:#4a453e;max-width:46ch;margin:0 0 8px}
+  .fineprint{font-size:13.5px;color:var(--muted);max-width:48ch;margin:0 0 26px}
+  .btn{appearance:none;border:none;cursor:pointer;font:inherit;background:var(--ink);color:#F4EFE3;
+    font-weight:700;padding:14px 26px;border-radius:10px;font-size:16px;transition:transform .12s}
+  .btn:hover{transform:translateY(-1px)}
+  .btn:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+  .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--hair)}
+
+  /* zodiac picker — Chinese and English carry equal weight */
+  .zsub{color:var(--muted);margin:0 0 20px;font-size:15px}
+  .zgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media (max-width:560px){.zgrid{grid-template-columns:repeat(3,1fr);gap:10px}}
+  .zbtn{background:var(--card);border:1.5px solid var(--hair);border-radius:14px;
+    padding:14px 6px 12px;cursor:pointer;font:inherit;text-align:center;
+    transition:border-color .15s,transform .12s,box-shadow .15s}
+  .zbtn .zc{font-size:26px;font-weight:700;line-height:1.1;display:block;color:var(--ink)}
+  .zbtn .ze{display:block;margin-top:6px;font-size:14px;font-weight:700;
+    letter-spacing:.02em;color:var(--ink)}
+  .zbtn .zy{display:block;margin-top:3px;font-size:11px;color:var(--muted);letter-spacing:.02em}
+  .zbtn:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 8px 18px -14px rgba(0,0,0,.5)}
+  .zbtn:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+
+  .progress{display:flex;align-items:center;gap:14px;margin:4px 0 22px}
+  .bar{flex:1;height:6px;background:var(--hair-soft);border-radius:6px;overflow:hidden}
+  .bar > i{display:block;height:100%;width:0;background:var(--ink);border-radius:6px;transition:width .35s ease}
+  .count{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.04em;white-space:nowrap}
+
+  .qtext{font-size:clamp(21px,3.6vw,26px);font-weight:700;line-height:1.25;margin:0 0 20px}
+  .qtext .weight{display:inline-block;margin-left:8px;font-size:12px;vertical-align:middle;
+    background:var(--ink);color:#F4EFE3;border-radius:20px;padding:3px 10px;letter-spacing:.05em;font-weight:700}
+  .opts{display:grid;gap:12px}
+  .opt{text-align:left;background:var(--card);border:1.5px solid var(--hair);border-radius:12px;
+    padding:16px 18px;font:inherit;font-size:16px;color:var(--ink);cursor:pointer;
+    transition:border-color .15s,transform .12s}
+  .opt:hover{border-color:var(--ink);transform:translateY(-1px)}
+  .opt:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+  .back{margin-top:22px;background:none;border:none;color:var(--muted);font:inherit;font-weight:700;cursor:pointer;padding:6px 2px}
+  .back:hover{color:var(--ink)}
+  .back[hidden]{display:none}
+
+  .rgrid{display:grid;grid-template-columns:minmax(280px,430px) 1fr;gap:30px;align-items:stretch}
+  .rleft,.rright{display:flex;flex-direction:column;min-width:0}
+  /* the two columns always end level: slack is absorbed inside each column */
+  .rleft .basis{margin-top:auto}
+  .rright .fields{flex:1;display:flex;flex-direction:column;justify-content:space-between}
+  @media (max-width:880px){
+    .rgrid{grid-template-columns:1fr;gap:0}
+    .rleft .basis{margin-top:0}
+    .rright .fields{display:block}
+  }
+  .result-head{font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    color:var(--muted);margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--hair)}
+  .card-slot{margin:0 auto 12px;max-width:520px}
+  .card-img{width:100%;display:block;border-radius:16px;box-shadow:0 18px 40px -22px rgba(0,0,0,.4)}
+  .cad-card{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:26px 26px 30px;
+    position:relative;overflow:hidden;box-shadow:0 18px 40px -22px rgba(0,0,0,.4)}
+  .cad-card .ribbon{position:absolute;top:0;left:24px;width:58px;padding:10px 0 14px;text-align:center;
+    color:#fff;font-size:10px;font-weight:700;letter-spacing:.08em;line-height:1.25;
+    clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%)}
+  .cad-card .zodiac{position:absolute;top:20px;right:24px;width:44px;height:44px;border-radius:50%;
+    border:2px solid;display:grid;place-items:center;font-size:22px;font-weight:700}
+  .cad-card .cad-name{font-size:32px;line-height:1;font-weight:800;letter-spacing:-.01em;margin:64px 0 12px;max-width:9ch}
+  .cad-card .cad-badge{display:inline-block;color:#fff;font-size:12px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:5px 14px;border-radius:4px;
+    clip-path:polygon(6px 0,calc(100% - 6px) 0,100% 50%,calc(100% - 6px) 100%,6px 100%,0 50%)}
+  .cad-card .cad-one{font-size:20px;font-weight:600;margin:18px 0 22px;max-width:22ch}
+  .cad-card .cad-quote{font-size:19px;font-weight:700;font-style:italic;max-width:20ch;position:relative;padding-left:4px}
+  .cad-card .cad-quote:before{content:"\201C";font-size:40px;line-height:0;position:relative;top:12px;margin-right:2px;opacity:.8}
+  .cad-card .cad-credit{position:absolute;bottom:16px;left:26px;font-size:12px;font-weight:700;color:var(--muted)}
+
+  .fields{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:10px 22px;margin-bottom:0}
+  .field{padding:13px 0;border-bottom:1px solid var(--hair-soft)}
+  .field:last-child{border-bottom:none}
+  .field .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;margin-bottom:5px}
+  .field .v{font-size:16.5px}
+
+  .basis{background:var(--card);border:1px dashed var(--hair);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .basis .k{font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:10px}
+  .mix{display:grid;gap:8px}
+  .mix-row{display:grid;grid-template-columns:190px 1fr 28px;align-items:center;gap:10px;font-size:14px}
+  .mix-row .mlabel{font-weight:600}
+  .mix-row .mbar{height:8px;background:var(--hair-soft);border-radius:6px;overflow:hidden}
+  .mix-row .mbar > i{display:block;height:100%;border-radius:6px}
+  .mix-row .mval{text-align:right;font-weight:700;color:var(--muted)}
+  @media (max-width:520px){.mix-row{grid-template-columns:140px 1fr 24px}}
+
+  .actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:0}
+  .share-note{font-size:13px;color:var(--muted);margin:0 0 20px;text-align:center}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--hair);text-align:center}
+  footer p{margin:0 0 8px}
+  .flinks{font-size:13.5px;color:var(--muted)}
+  .flinks a{color:var(--navy);text-decoration:none;font-weight:700}
+  .flinks a:hover{text-decoration:underline}
+  .fquote{font-family:Georgia,"Times New Roman",serif;font-style:italic;
+    font-size:14px;color:var(--ink);margin-top:14px}
+  .fcredit{font-size:12.5px;color:var(--muted);font-weight:700}
+  .fdisc{font-size:11.5px;color:var(--muted);max-width:86ch;margin:14px auto 0;line-height:1.65}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mast">
+    <div class="seal" id="mastSeal">?</div>
+    <span class="eyebrow" id="mastLabel">Corp Animal Cards</span>
+  </div>
+
+  <section class="screen active" id="intro">
+    <h1>Which workplace animal<span class="sub">are you?</span></h1>
+    <p class="lede">Pick your Chinese zodiac, answer eight quick questions, get your card. No sign-up, nothing to install.</p>
+    <p class="fineprint">Not a personality test. It describes how you tend to operate at work right now &mdash; not who you are forever. No card is better than another.</p>
+    <button class="btn" id="startBtn">Start &rarr;</button>
+  </section>
+
+  <section class="screen" id="zodiac">
+    <h2>First &mdash; your zodiac</h2>
+    <p class="zsub">This is your identity on the card. Your archetype comes from the questions.</p>
+    <div class="zgrid" id="zgrid"></div>
+    <button class="back" id="zBack">&larr; Back</button>
+  </section>
+
+  <section class="screen" id="quiz">
+    <div class="progress"><div class="bar"><i id="barFill"></i></div><span class="count" id="count">1 / 8</span></div>
+    <p class="qtext" id="qtext"></p>
+    <div class="opts" id="opts"></div>
+    <button class="back" id="backBtn" hidden>&larr; Back</button>
+  </section>
+
+  <section class="screen" id="result">
+    <div class="rgrid">
+      <div class="rleft">
+        <div class="result-head">Your card</div>
+        <div class="card-slot" id="cardSlot"></div>
+        <p class="share-note">Screenshot the card to share it.</p>
+        <div class="basis"><div class="k">Why this card</div><div class="mix" id="mix"></div></div>
+        <div class="actions"><button class="btn ghost" id="retakeBtn">Start over</button></div>
+      </div>
+      <div class="rright">
+        <div class="result-head">The full read</div>
+        <div class="fields" id="fields"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="flinks">
+      <a id="lTool" href="#">This tool</a> ·
+      <a id="lLib" href="#">Decision Systems Toolkit</a> ·
+      <a id="lGit" href="#">Open source on GitHub</a>
+    </p>
+    <p class="fquote">The tools tell you what the numbers say. The judgment is still yours.</p>
+    <p class="fcredit">— Grace Ge · gracege.com</p>
+    <p class="fdisc">Corp Animal Cards describes how people tend to operate at work. It is not a personality test,
+      and it is not intended for hiring, screening, or evaluation decisions.</p>
+    <p id="artCheck" class="fdisc"></p>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   LINKS — edit these three, nothing else.
+   ============================================================ */
+const LINKS = {
+  tool:    "https://gracege.com/tools/corp-animal-cards/toolkit",
+  library: "https://gracege.com/tools/tool-library",
+  github:  "https://github.com/Grace-RGe/decision-systems-toolkit"
+};
+/* Set to true to check all 48 card images load. Turn off before publishing. */
+const ART_CHECK = false;
+
+const ORDER = ["QuietBuilder","StrategicChallenger","ReliableAnchor","OpportunityBuilder"];
+const ARCH = {
+  QuietBuilder:{num:"01",file:"Quiet_Builder",name:"Quiet Builder",badge:"Deep Worker",accent:"navy",
+    one:"Builds long-term value without making noise.",
+    superpower:"Turns ideas into reliable systems.",
+    style:"Heads-down, results over recognition.",
+    blind:"Waits too long before speaking up.",
+    pressure:"Gets quieter. Keeps working.",
+    bestwith:"People who translate the work into visibility.",
+    growth:"Speak one meeting earlier than feels comfortable.",
+    quote:"I'd rather build than argue."},
+  StrategicChallenger:{num:"02",file:"Strategic_Challenger",name:"Strategic Challenger",badge:"Critical Thinker",accent:"red",
+    one:"Challenges ideas, not people.",
+    superpower:"Protects the quality of decisions.",
+    style:"Questions assumptions, holds ground on facts.",
+    blind:"Can underestimate the politics in the room.",
+    pressure:"Gets more direct — with everyone.",
+    bestwith:"Structured thinkers who welcome real debate.",
+    growth:"Win the room, not just the argument.",
+    quote:"I care more about getting it right than being comfortable."},
+  ReliableAnchor:{num:"03",file:"Reliable_Anchor",name:"Reliable Anchor",badge:"Stability Keeper",accent:"green",
+    one:"Keeps the team moving when everything gets chaotic.",
+    superpower:"Creates stability other people can build on.",
+    style:"Steady, dependable, good at closing loose ends.",
+    blind:"Carries too much, too quietly.",
+    pressure:"Absorbs everyone else's load on top of their own.",
+    bestwith:"People who notice the load and offer to share it.",
+    growth:"Trust others with it sooner.",
+    quote:"If I don't hold this together, who will?"},
+  OpportunityBuilder:{num:"04",file:"Opportunity_Builder",name:"Opportunity Builder",badge:"Connector",accent:"plum",
+    one:"Quietly turns relationships into opportunities.",
+    superpower:"Creates openings without forcing them.",
+    style:"Long-term, low-key, connects people and resources.",
+    blind:"Avoids conflict that actually needs to happen.",
+    pressure:"Starts accommodating everyone else's needs.",
+    bestwith:"People direct enough to name the real issue.",
+    growth:"Protect your own priorities out loud.",
+    quote:"The right introduction is worth more than the right argument."}
+};
+const ACCENT_HEX = {navy:"#1E3A5F",red:"#9B2C2C",green:"#445A2E",plum:"#5B3A78"};
+const LABEL = {QuietBuilder:"Quiet Builder",StrategicChallenger:"Strategic Challenger",
+               ReliableAnchor:"Reliable Anchor",OpportunityBuilder:"Opportunity Builder"};
+
+/* `file` must match the PNG filename token exactly (case-sensitive) */
+const ZODIAC = [
+  {key:"rat",     char:"鼠", en:"Rat",     file:"Rat",     years:"1984 · 1996 · 2008"},
+  {key:"ox",      char:"牛", en:"Ox",      file:"Ox",      years:"1985 · 1997 · 2009"},
+  {key:"tiger",   char:"虎", en:"Tiger",   file:"Tiger",   years:"1986 · 1998 · 2010"},
+  {key:"rabbit",  char:"兔", en:"Rabbit",  file:"Rabbit",  years:"1987 · 1999 · 2011"},
+  {key:"dragon",  char:"龙", en:"Dragon",  file:"Dragon",  years:"1988 · 2000 · 2012"},
+  {key:"snake",   char:"蛇", en:"Snake",   file:"Snake",   years:"1989 · 2001 · 2013"},
+  {key:"horse",   char:"马", en:"Horse",   file:"Horse",   years:"1990 · 2002 · 2014"},
+  {key:"goat",    char:"羊", en:"Goat",    file:"Goat",    years:"1991 · 2003 · 2015"},
+  {key:"monkey",  char:"猴", en:"Monkey",  file:"Monkey",  years:"1992 · 2004 · 2016"},
+  {key:"rooster", char:"鸡", en:"Rooster", file:"Rooster", years:"1993 · 2005 · 2017"},
+  {key:"dog",     char:"狗", en:"Dog",     file:"Dog",     years:"1994 · 2006 · 2018"},
+  {key:"pig",     char:"猪", en:"Pig",     file:"Pig",     years:"1995 · 2007 · 2019"}
+];
+const ZBY = Object.fromEntries(ZODIAC.map(z=>[z.key,z]));
+
+const QUESTIONS = [
+  {q:"A decision at a meeting feels wrong to you. What do you do?",
+   a:{QuietBuilder:"Stay quiet in the room, build the evidence or prototype privately first",
+      StrategicChallenger:"Say it in the room, even if it's not the popular view",
+      ReliableAnchor:"Go along with it, but make sure execution doesn't fall apart either way",
+      OpportunityBuilder:"Talk privately to the person who can actually change it"}},
+  {q:"A project starts slipping. Your first move?",
+   a:{QuietBuilder:"Head down, finish your own piece without waiting for the plan to settle",
+      StrategicChallenger:"Openly question whether the plan itself still makes sense",
+      ReliableAnchor:"Quietly start tracking where it's leaking, patch it before raising it",
+      OpportunityBuilder:"Go ask the person under the most pressure what they actually need"}},
+  {q:"You just finished something you're proud of. Then what?",
+   a:{QuietBuilder:"Ship it, move to the next thing, don't announce it",
+      StrategicChallenger:"State clearly once what it solved and why it matters — said once, that's enough",
+      ReliableAnchor:"Confirm it actually holds up under real conditions before calling it done",
+      OpportunityBuilder:"Mention it in the right setting, to the right person"}},
+  {q:"Someone gives you feedback you don't agree with. Instinct?",
+   a:{QuietBuilder:"Keep what's useful, ignore the rest, keep working",
+      StrategicChallenger:"Push back on the spot — polite but direct",
+      ReliableAnchor:"Accept it first, keep things moving, revisit if it becomes a pattern",
+      OpportunityBuilder:"Ask a question that surfaces what's really behind the feedback"}},
+  {q:"Under real deadline pressure, what happens to you?",
+   a:{QuietBuilder:"Get quieter, just keep working",
+      StrategicChallenger:"Get more direct with everyone",
+      ReliableAnchor:"Start absorbing other people's problems on top of your own",
+      OpportunityBuilder:"Start saying yes more, to buy some surface calm"}},
+  {q:"People usually come to you because…",
+   a:{QuietBuilder:"“Can you help me build or fix this”",
+      StrategicChallenger:"“Is this decision actually right”",
+      ReliableAnchor:"“Can you make sure this doesn't fall apart”",
+      OpportunityBuilder:"“Do you know someone who can help with this”"}},
+  {q:"How do you usually share progress?",
+   a:{QuietBuilder:"You don't, until it's done",
+      StrategicChallenger:"Clearly state the current state, including what's wrong",
+      ReliableAnchor:"Flag risks quietly and early, before they become visible problems",
+      OpportunityBuilder:"Pull in privately whoever actually needs to know"}},
+  {q:"Which line fits you best?", weight:2,
+   a:{QuietBuilder:"“I'd rather build than argue.”",
+      StrategicChallenger:"“I care more about getting it right than being comfortable.”",
+      ReliableAnchor:"“If I don't hold this together, who will?”",
+      OpportunityBuilder:"“The right introduction is worth more than the right argument.”"}}
+];
+
+let zKey=null, step=0;
+const answers=new Array(QUESTIONS.length).fill(null);
+let optionOrder=[];
+const $=id=>document.getElementById(id);
+function show(n){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(n).classList.add("active");window.scrollTo({top:0,behavior:"smooth"});}
+function shuffle(a){const r=a.slice();for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+function buildOrder(){optionOrder=QUESTIONS.map(()=>shuffle(ORDER));}
+
+function renderZodiac(){
+  const g=$("zgrid"); g.innerHTML="";
+  ZODIAC.forEach(z=>{
+    const b=document.createElement("button");
+    b.className="zbtn"; b.type="button";
+    b.innerHTML=`<span class="zc">${z.char}</span><span class="ze">${z.en}</span><span class="zy">${z.years}</span>`;
+    b.addEventListener("click",()=>{ zKey=z.key; startQuiz(); });
+    g.appendChild(b);
+  });
+}
+
+function startQuiz(){ step=0; answers.fill(null); buildOrder();
+  const z=ZBY[zKey];
+  $("mastSeal").textContent=z.char;
+  $("mastLabel").textContent="Corp Animal Cards · "+z.en;
+  renderQuestion(); show("quiz");
+}
+function renderQuestion(){
+  const item=QUESTIONS[step];
+  $("count").textContent=(step+1)+" / "+QUESTIONS.length;
+  $("barFill").style.width=(step/QUESTIONS.length*100)+"%";
+  $("qtext").innerHTML=item.q+(item.weight?'<span class="weight">counts double</span>':"");
+  const opts=$("opts"); opts.innerHTML="";
+  optionOrder[step].forEach(key=>{
+    const b=document.createElement("button"); b.className="opt"; b.type="button"; b.textContent=item.a[key];
+    if(answers[step]===key) b.style.borderColor="var(--ink)";
+    b.addEventListener("click",()=>choose(key)); opts.appendChild(b);
+  });
+  $("backBtn").hidden=step===0;
+}
+function choose(key){ answers[step]=key;
+  if(step<QUESTIONS.length-1){step++;renderQuestion();} else {$("barFill").style.width="100%";finish();}
+}
+
+function score(){const s={QuietBuilder:0,StrategicChallenger:0,ReliableAnchor:0,OpportunityBuilder:0};
+  answers.forEach((k,i)=>{s[k]+=(QUESTIONS[i].weight||1);});return s;}
+function pickWinner(s){const max=Math.max(...ORDER.map(k=>s[k]));const leaders=ORDER.filter(k=>s[k]===max);
+  if(leaders.length===1)return leaders[0];const q8=answers[QUESTIONS.length-1];
+  if(leaders.includes(q8))return q8;return leaders[0];}
+
+function imageSrc(a){ return ARCH[a].num+"-"+ARCH[a].file+"_"+ZBY[zKey].file+".jpg"; }
+
+function finish(){
+  const s=score(), winner=pickWinner(s), a=ARCH[winner], z=ZBY[zKey], hex=ACCENT_HEX[a.accent];
+  const ms=$("mastSeal"); ms.style.borderColor=hex; ms.style.color=hex;
+
+  const slot=$("cardSlot"); slot.innerHTML="";
+  const img=new Image(); img.className="card-img"; img.alt=a.name+" "+z.en;
+  img.onerror=()=>{slot.innerHTML=cssCard(a,z,hex);};
+  img.onload=()=>{slot.innerHTML="";slot.appendChild(img);};
+  img.src=imageSrc(winner);
+
+  const F=[["One sentence",a.one],["Superpower",a.superpower],["Natural style",a.style],
+    ["Blind spot",a.blind],["Under pressure",a.pressure],["Works best with",a.bestwith],
+    ["Growth edge",a.growth],["Signature line","“"+a.quote+"”"]];
+  $("fields").innerHTML=F.map(([k,v])=>`<div class="field"><div class="k" style="color:${hex}">${k}</div><div class="v">${v}</div></div>`).join("");
+
+  const total=ORDER.reduce((t,k)=>t+s[k],0);
+  $("mix").innerHTML=ORDER.slice().sort((x,y)=>s[y]-s[x]).map(k=>{
+    const pct=total?Math.round(s[k]/total*100):0, on=k===winner;
+    return `<div class="mix-row"><span class="mlabel" style="${on?`color:${hex}`:""}">${LABEL[k]}${on?" ✓":""}</span>
+      <span class="mbar"><i style="width:${pct}%;background:${on?hex:"#C9C0B0"}"></i></span>
+      <span class="mval">${s[k]}</span></div>`;}).join("");
+
+  show("result");
+}
+function cssCard(a,z,hex){
+  return `<div class="cad-card" style="border-top:5px solid ${hex}">
+    <div class="ribbon" style="background:${hex}">CORP<br>ANIMAL<br>CARDS</div>
+    <div class="zodiac" style="border-color:${hex};color:${hex}">${z.char}</div>
+    <div class="cad-name" style="color:${hex}">${a.name} ${z.en}</div>
+    <span class="cad-badge" style="background:${hex}">${a.badge}</span>
+    <div class="cad-one">${a.one}</div>
+    <div class="cad-quote" style="color:${hex}">${a.quote}”</div>
+    <div class="cad-credit">gracege.com</div></div>`;
+}
+
+lTool.href=LINKS.tool; lLib.href=LINKS.library; lGit.href=LINKS.github;
+
+if(ART_CHECK){
+  const miss=[];let done=0,total=ZODIAC.length*ORDER.length;
+  ZODIAC.forEach(z=>ORDER.forEach(k=>{
+    const src=ARCH[k].num+"-"+ARCH[k].file+"_"+z.file+".jpg";
+    const im=new Image();
+    im.onload=im.onerror=function(ev){ if(ev.type==="error") miss.push(src);
+      if(++done===total) artCheck.textContent = miss.length
+        ? "ART CHECK — missing "+miss.length+": "+miss.join(", ")
+        : "ART CHECK — all "+total+" card images load."; };
+    im.src=src;
+  }));
+}
+
+$("startBtn").addEventListener("click",()=>{renderZodiac();show("zodiac");});
+$("zBack").addEventListener("click",()=>show("intro"));
+$("backBtn").addEventListener("click",()=>{if(step>0){step--;renderQuestion();}});
+$("retakeBtn").addEventListener("click",()=>{
+  zKey=null; const ms=$("mastSeal"); ms.style.borderColor="";ms.style.color="";ms.textContent="?";
+  $("mastLabel").textContent="Corp Animal Cards"; show("intro");
+});
+</script>
+</body>
+</html>
