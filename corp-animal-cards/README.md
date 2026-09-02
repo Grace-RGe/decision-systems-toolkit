@@ -1,4 +1,6 @@
-# Corp Animal Cards
+# Working Style Cards
+
+*The Corp Animal Cards edition*
 
 A workplace-archetype card tool. Pick your Chinese zodiac sign, answer eight
 workplace-situation questions, and get one of four archetype cards — rendered as
@@ -8,6 +10,11 @@ original illustrated artwork, one card per zodiac × archetype combination.
 **Listed at:** https://gracege.com/tools/tool-library
 
 Part of the [Decision Systems Toolkit](https://github.com/Grace-RGe/decision-systems-toolkit).
+
+> **On the name.** The tool is called *Working Style Cards*; *Corp Animal Cards*
+> is the edition name and appears on the card artwork itself. The folder, the
+> file names, and the public URLs keep the `corp-animal-cards` slug so existing
+> links stay valid. Both names refer to the same tool.
 
 ---
 
@@ -31,6 +38,9 @@ diagnosis on different art.
 ×2. A tie resolves to the archetype chosen in Q8; a remaining tie resolves by a
 fixed archetype order.
 
+The four answer options are shuffled independently on every question, every run,
+so option position never encodes the archetype.
+
 ## What it is not
 
 This is not a personality test, and it is not built to be one. It is not
@@ -45,6 +55,8 @@ tool, not boilerplate.
   email capture. Nothing leaves the browser.
 - Works offline. Open the file from disk and it runs.
 - The only external assets are the 48 card images sitting next to the HTML.
+- The page declares `color-scheme: light` so mobile browsers do not force-invert
+  it into an unreadable dark rendering.
 
 ### Files
 
